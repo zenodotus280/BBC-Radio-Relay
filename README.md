@@ -11,3 +11,5 @@ If you have suggestions or have issues, please use the issues or discussion area
 ---
 
 ## How it works
+
+At present it is best to use the instructions at the original repo. I intend on creating a shell script to handle the installation and station configuration.
