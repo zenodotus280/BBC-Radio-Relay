@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Example usage: "./restart-service.sh radio2"
+# Example usage: "./restart-service.sh radio_two"
 
 # I have found that sometimes, (very rarely), ffmpeg randomly hangs. It stops downloading,
 # but ffmpeg never crashes so essentially everything comes to a pause. Since ffmpeg

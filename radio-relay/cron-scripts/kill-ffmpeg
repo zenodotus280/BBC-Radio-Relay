@@ -11,8 +11,8 @@ BASE_FOLDER=
 
 purgelog="$BASE_FOLDER/logs/purgelog.txt"
 
-# 2 days is the age limit = 60*60*24*2 = 172800
-agelimit=172800
+# 4 hours is the age limit = 60*60*4 = 14400
+agelimit=14400
 
 ffmpegpid=$(pidof ffmpeg)
 

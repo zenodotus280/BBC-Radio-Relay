@@ -137,35 +137,35 @@ startstream () {
     (sleep $delay && echo "`date` Starting $1-$2" >> $logfile && ices2 "$BASE_FOLDER/ices-xml/gen-$1-$2.xml") &
 }
 
-startnewfiestream () {
+startCustomstream () {
     #usage: $1: stream variable name (ie. 'radio_two')
 
-    # 3.5 * 60 * 60
-    delay=12600
+    # Multiply the number of hours by 3600 (60*60) to get the seconds. I'm using 30 seconds here as an example:
+    delay=30
     
-    echo "sleep $delay && echo \"Starting $1-3-5\" && ices2 \"$BASE_FOLDER/ices-xml/gen-$1-3-5.xml\" &" >> $logfile
-    (sleep $delay && echo "`date` Starting $1-3-5" >> $logfile && ices2 "$BASE_FOLDER/ices-xml/gen-$1-3-5.xml") &
+    echo "sleep $delay && echo \"Starting $1-Custom\" && ices2 \"$BASE_FOLDER/ices-xml/gen-$1-Custom.xml\" &" >> $logfile
+    (sleep $delay && echo "`date` Starting $1-Custom" >> $logfile && ices2 "$BASE_FOLDER/ices-xml/gen-$1-Custom.xml") &
 }
 
 echo "Starting $1 delayed stream" >> $logfile
 
 # Generate the xml files that will be read by ices2.
-generate_xml "$1" $2 "$3" "3-5" #newfoundland
+generate_xml "$1" $2 "$3" "Custom" #user-defined
 generate_xml "$1" $2 "$3" 4 #atlantic
 generate_xml "$1" $2 "$3" 5 #eastern
-generate_xml "$1" $2 "$3" 6 #mountain
-generate_xml "$1" $2 "$3" 7 #central
+generate_xml "$1" $2 "$3" 6 #central
+generate_xml "$1" $2 "$3" 7 #mountain
 generate_xml "$1" $2 "$3" 8 #pacific
 
 # Start the downloader
 $BASE_FOLDER/run-scripts/downloader.sh $2 &
 
 # Start the delayed streams
-startnewfiestream $2 #newfoundland
+startCustomstream $2 #user-defined
 startstream $2 4 #atlantic
 startstream $2 5 #eastern
-startstream $2 6 #mountain
-startstream $2 7 #central
+startstream $2 6 #central
+startstream $2 7 #mountain
 startstream $2 8 #pacific
 
 echo "Finished initiation of $1" >> $logfile
