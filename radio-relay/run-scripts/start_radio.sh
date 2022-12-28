@@ -7,7 +7,7 @@ BASE_FOLDER=
 
 SERVER_ADDRESS="localhost"
 SERVER_PORT="8000"
-SERVER_PASSWORD="abc"
+SERVER_PASSWORD="hackme"
 
 if [ "$#" -ne 3 ]; then
     echo "Illegal number of parameters"
