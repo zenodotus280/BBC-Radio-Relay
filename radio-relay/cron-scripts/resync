@@ -23,7 +23,7 @@ ps axf | grep ices2 | grep radio_one | awk '{print "kill -9 " $1}' | sh
 
 rm $BASE_FOLDER/audio/*radio_one*
 
-$BASE_FOLDER/run-scripts/start_radio.sh "BBC Radio 1" radio_one "Pop, Dance, R&B, Rock"
+$BASE_FOLDER/run-scripts/start_radio.sh "BBC Radio 1" radio_one "Pop, Dance, Rock"
 
 # ============================================================
 # Restart radio_two
