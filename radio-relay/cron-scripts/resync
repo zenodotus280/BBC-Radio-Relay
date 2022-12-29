@@ -92,4 +92,4 @@ echo "python3 -m http.server 80 --directory \"$base_dir/../www\"" | at now &
 
 # The version below is for delaying the HTTP server until the last time zone comes alive.
 # Useful for High Availibility with HAProxy since every health check will fail until it is ready.
-# echo "python3 -m http.server 80 --directory \"$base_dir/../www\"" | at now + 8 hours
+# echo "python3 -m http.server 80 --directory \"$base_dir/../www\"" | at now + 8 hours &

@@ -39,7 +39,7 @@ sed -i 's|BASE_FOLDER=|BASE_FOLDER='"$BASE_FOLDER"'|' $KILL_FFMPEG $PURGE_OGG $R
 
 # keep file length under 4 hours, clear day-old files, and restart all weekly
 echo "0 */12 * * * sh $BASE_FOLDER/cron-scripts/kill-ffmpeg
-0 */1 * * * sh $BASE_FOLDER/BBCRadioDelay/cron-scripts/purge-ogg
+0 */1 * * * sh $BASE_FOLDER/cron-scripts/purge-ogg
 0 6 * * 1 apt upgrade -y; systemctl reboot
 @reboot sh $BASE_FOLDER/cron-scripts/resync
 @reboot /etc/init.d/icecast2 start" | crontab -
