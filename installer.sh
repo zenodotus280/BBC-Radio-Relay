@@ -20,7 +20,7 @@ START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 apt update && apt install wget unzip dialog python3 at ffmpeg ices2 icecast2 -y
 
 rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
-wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/main.zip" -O /opt/bbc-radio-relay.zip
+wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/testing.zip" -O /opt/bbc-radio-relay.zip
 unzip -d /opt /opt/bbc-radio-relay.zip
 mkdir -p $BASE_FOLDER/www
 cp -r /opt/BBC-Radio-Relay-testing/radio-relay/* $BASE_FOLDER
