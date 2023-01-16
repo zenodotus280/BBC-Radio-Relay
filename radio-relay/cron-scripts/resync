@@ -87,7 +87,6 @@ $BASE_FOLDER/run-scripts/start_radio.sh "BBC Radio 6" 6music "Alternative"
 
 working_dir=$0
 base_dir=$(dirname "$working_dir")
-python3 -m http.server 80 --directory "$base_dir/../www"
 echo "python3 -m http.server 80 --directory \"$base_dir/../www\"" | at now &
 
 # The version below is for delaying the HTTP server until the last time zone comes alive.

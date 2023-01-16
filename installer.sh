@@ -30,7 +30,7 @@ DOWNLOADER=$BASE_FOLDER/run-scripts/downloader.sh
 RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES=("wget" "unzip" "dialog" "python3")
-XTR_PACKAGES=("ffmpeg" "ices2" "icecast2")
+XTR_PACKAGES=("ffmpeg" "ices2" "icecast2" "at")
 
 # install/uninstall packages, files, and folders
 
