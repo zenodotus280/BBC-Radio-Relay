@@ -1,0 +1,108 @@
+<style>
+    .logo {
+        box-shadow: 1px 1px 0px 0px black, 2px 2px 0px 0px black, 3px 3px 0px 0px black, 4px 4px 0px 0px black, 5px 5px 0px 0px black;
+        border: 3px solid black;
+    }
+
+    .button-raised {
+        font-family: "Open Sans", sans-serif;
+        font-weight: bold;
+        font-size: 16px;
+        letter-spacing: 2px;
+        background-color: lightgrey;
+        text-decoration: none;
+        text-transform: uppercase;
+        color: #000;
+        cursor: pointer;
+        border: 3px solid;
+        padding: 0.25em 0.5em;
+        margin: 5px;
+        box-shadow: 1px 1px 0px 0px, 2px 2px 0px 0px, 3px 3px 0px 0px, 4px 4px 0px 0px, 5px 5px 0px 0px;
+        position: relative;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+    }
+
+    .button-raised:active {
+        box-shadow: 0px 0px 0px 0px;
+        top: 5px;
+        left: 5px;
+    }
+
+    .button-raised:disabled {
+        pointer-events: none;
+        background-color: chocolate;
+    }
+
+    .button-raised-mute.muted {
+        background-color: darkred;
+    }
+
+    .button-raised-mute:not(.muted) {}
+</style>
+
+<div class="container">
+
+
+
+    <div class="d-flex justify-content-center align-items-center mt-3">
+        <div><img class="logo" src="../media/{{ station.stn_name }}/128x128.png"></div>
+    </div>
+    <div class="d-flex justify-content-center align-items-center mt-3">
+        <audio id="player" volume="0.5"
+            preload="auto" playsinline></audio>
+        <script>
+            var player = document.getElementById("player");
+            player.src = location.origin + ":8000/{{ station.stn_name }}/{{ station.tz_offset }}";
+        </script>
+
+        <button id="vol_minus" class="button-raised vol_con" style="display: none" role="button" onclick="
+        var player = document.getElementById('player');
+        player.volume -= 0.1;
+    ">−</button>
+
+        <button class="button-raised button-raised-mute vol_con" style="display: none" role="button" onclick="
+      var player = document.getElementById('player');
+        player.muted = !player.muted;
+        if (player.muted) {
+            this.classList.add('muted');
+        } else {
+            this.classList.remove('muted');
+        }      
+    ">Mute</button>
+
+        <button id="vol_plus" class="button-raised vol_con" style="display: none" role="button" onclick="
+        var player = document.getElementById('player');
+        player.volume += 0.1;
+    ">+</button>
+
+        <button id="start-button" class="button-raised" role="button" disabled onclick="
+                var player = document.getElementById('player');
+                player.pause();
+                var duration = Math.max((player.duration - 3), 0);
+                player.currentTime = duration;
+                player.play();
+                document.querySelectorAll('.vol_con').forEach(function(element) {
+                element.style.display = 'block';
+                });
+                this.style.display = 'none'
+
+                ">Loading . . .</button>
+    
+        <script>
+            var player = document.getElementById('player');
+            var start = document.getElementById('start-button');
+            player.addEventListener('canplaythrough', function () {
+
+                setTimeout(function () {
+                    start.removeAttribute('disabled');
+                    start.textContent = "Tune in!";
+                }, 0);
+
+            });
+        </script>
+    </div>
+</div>
+</div>
+</div>

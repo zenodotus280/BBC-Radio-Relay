@@ -1,0 +1,19 @@
+<body>
+  <div class="container-sm mt-3">
+    <h2 class="text-center">BBC Radio Relay</h2>
+
+    <ul class="nav justify-content-center">
+    {% for station in stations|groupby("tz_offset")|reverse %}
+      <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">{{ station[1][0]['tz_name'] }}</a>
+      <ul class="dropdown-menu">
+        {% for x in station.list %} 
+        <li class="text-center"><a class="dropdown-item" href="/stations/{{ x.stn_name }}-{{ x.tz_offset }}.html"><img src="/media/{{ x.stn_name }}/1920x1080.png" width="112"></a></li>
+        {% endfor %}
+      </ul>
+            {% endfor %}
+                
+      </li>
+    </ul>
+  </div>
+</body>
