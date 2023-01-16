@@ -169,9 +169,12 @@
         <div><img class="logo" src="../media/radio_five_live/128x128.png"></div>
     </div>
     <div class="d-flex justify-content-center align-items-center mt-3">
-        <audio id="player" src="https://ice.bbcradiorelay.net/radio_five_live/8" volume="0.5"
+        <audio id="player" volume="0.5"
             preload="auto" playsinline></audio>
-
+        <script>
+            var player = document.getElementById("player");
+            player.src = location.origin + ":8000/radio_five_live/8";
+        </script>
 
         <button id="vol_minus" class="button-raised vol_con" style="display: none" role="button" onclick="
         var player = document.getElementById('player');
