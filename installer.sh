@@ -35,7 +35,7 @@ RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip"
 XTR_PACKAGES="ffmpeg ices2 icecast2 at"
-STABLE_VERSION=1.1.0
+STABLE_VERSION=1.1.1
 
 # install/uninstall packages, files, and folders
 
@@ -65,11 +65,12 @@ if [ "$MODE" == "1" ]; then
         unzip -d /opt /opt/bbc-radio-relay.zip
         cp -r /opt/BBC-Radio-Relay-testing/radio-relay/* $BASE_FOLDER
         cp -r /opt/BBC-Radio-Relay-testing/radio-player/* $BASE_FOLDER/www
-        cd $BASE_FOLDER/www
-        python3 $BASE_FOLDER/www/generate.py
-        cd /root
     fi
-    
+
+    cd $BASE_FOLDER/www
+    python3 $BASE_FOLDER/www/generate.py
+    cd /root
+
 elif [ "$MODE" == "2" ]; then
     # stop services if running and remove uncommon packages
     systemctl stop icecast2

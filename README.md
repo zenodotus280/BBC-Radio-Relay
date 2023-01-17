@@ -3,7 +3,7 @@
 Time-shifted BBC Radio for North American listeners.
 
 ## Testing Branch Notes
-This is the testing branch. This contains the latest changes and is what I use when trying new features and troubleshooting issues. Consider it "alpha". The main git repo should be considered "beta" and the version releases are stable.
+This contains the latest changes and is what I use when trying new features and troubleshooting issues. Consider it "alpha". The main git repo should be considered "beta" and the version releases are stable.
 
 ## Welcome
 
