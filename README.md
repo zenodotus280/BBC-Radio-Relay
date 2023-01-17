@@ -2,6 +2,9 @@
 
 Time-shifted BBC Radio for North American listeners.
 
+## Testing Branch Notes
+This is the testing branch. This contains the latest changes and is what I use when trying new features and troubleshooting issues. Consider it "alpha". The main git repo should be considered "beta" and the version releases are stable.
+
 ## Welcome
 
 This is a continuation of the project started (but no longer maintained) by [Stephen Marcok](https://github.com/marcokstephen/BBCRadioDelay). The core function is to receive audio directly from the BBC, store it, and then stream it back out after a configurable series of intervals: 4-8 hours as needed so that the audio gives the impression of being broadcast live. In this way you can get a BBC mornign music show at 7am and not at midnight in Mountain Time. Instructions are offered at the bottom of this readme.

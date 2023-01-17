@@ -1,0 +1,182 @@
+[
+{
+"stn_name": "radio_one",
+"stn_Fullname": "Radio 1",
+"tz_name": "Pacific",
+"tz_offset": "8"
+},
+{
+"stn_name": "radio_one",
+"stn_Fullname": "Radio 1",
+"tz_name": "Mountain",
+"tz_offset": "7"
+},
+{
+"stn_name": "radio_one",
+"stn_Fullname": "Radio 1",
+"tz_name": "Central",
+"tz_offset": "6"
+},
+{
+"stn_name": "radio_one",
+"stn_Fullname": "Radio 1",
+"tz_name": "Eastern",
+"tz_offset": "5"
+},
+{
+"stn_name": "radio_one",
+"stn_Fullname": "Radio 1",
+"tz_name": "Atlantic",
+"tz_offset": "4"
+},
+{
+"stn_name": "radio_two",
+"stn_Fullname": "Radio 2",
+"tz_name": "Pacific",
+"tz_offset": "8"
+},
+{
+"stn_name": "radio_two",
+"stn_Fullname": "Radio 2",
+"tz_name": "Mountain",
+"tz_offset": "7"
+},
+{
+"stn_name": "radio_two",
+"stn_Fullname": "Radio 2",
+"tz_name": "Central",
+"tz_offset": "6"
+},
+{
+"stn_name": "radio_two",
+"stn_Fullname": "Radio 2",
+"tz_name": "Eastern",
+"tz_offset": "5"
+},
+{
+"stn_name": "radio_two",
+"stn_Fullname": "Radio 2",
+"tz_name": "Atlantic",
+"tz_offset": "4"
+},
+{
+"stn_name": "radio_three",
+"stn_Fullname": "Radio 3",
+"tz_name": "Pacific",
+"tz_offset": "8"
+},
+{
+"stn_name": "radio_three",
+"stn_Fullname": "Radio 3",
+"tz_name": "Mountain",
+"tz_offset": "7"
+},
+{
+"stn_name": "radio_three",
+"stn_Fullname": "Radio 3",
+"tz_name": "Central",
+"tz_offset": "6"
+},
+{
+"stn_name": "radio_three",
+"stn_Fullname": "Radio 3",
+"tz_name": "Eastern",
+"tz_offset": "5"
+},
+{
+"stn_name": "radio_three",
+"stn_Fullname": "Radio 3",
+"tz_name": "Atlantic",
+"tz_offset": "4"
+},
+{
+"stn_name": "radio_fourfm",
+"stn_Fullname": "Radio 4",
+"tz_name": "Pacific",
+"tz_offset": "8"
+},
+{
+"stn_name": "radio_fourfm",
+"stn_Fullname": "Radio 4",
+"tz_name": "Mountain",
+"tz_offset": "7"
+},
+{
+"stn_name": "radio_fourfm",
+"stn_Fullname": "Radio 4",
+"tz_name": "Central",
+"tz_offset": "6"
+},
+{
+"stn_name": "radio_fourfm",
+"stn_Fullname": "Radio 4",
+"tz_name": "Eastern",
+"tz_offset": "5"
+},
+{
+"stn_name": "radio_fourfm",
+"stn_Fullname": "Radio 4",
+"tz_name": "Atlantic",
+"tz_offset": "4"
+},
+{
+"stn_name": "radio_five_live",
+"stn_Fullname": "Radio 5",
+"tz_name": "Pacific",
+"tz_offset": "8"
+},
+{
+"stn_name": "radio_five_live",
+"stn_Fullname": "Radio 5",
+"tz_name": "Mountain",
+"tz_offset": "7"
+},
+{
+"stn_name": "radio_five_live",
+"stn_Fullname": "Radio 5",
+"tz_name": "Central",
+"tz_offset": "6"
+},
+{
+"stn_name": "radio_five_live",
+"stn_Fullname": "Radio 5",
+"tz_name": "Eastern",
+"tz_offset": "5"
+},
+{
+"stn_name": "radio_five_live",
+"stn_Fullname": "Radio 5",
+"tz_name": "Atlantic",
+"tz_offset": "4"
+},
+{
+"stn_name": "6music",
+"stn_Fullname": "6Music",
+"tz_name": "Pacific",
+"tz_offset": "8"
+},
+{
+"stn_name": "6music",
+"stn_Fullname": "6Music",
+"tz_name": "Mountain",
+"tz_offset": "7"
+},
+{
+"stn_name": "6music",
+"stn_Fullname": "6Music",
+"tz_name": "Central",
+"tz_offset": "6"
+},
+{
+"stn_name": "6music",
+"stn_Fullname": "6Music",
+"tz_name": "Eastern",
+"tz_offset": "5"
+},
+{
+"stn_name": "6music",
+"stn_Fullname": "6Music",
+"tz_name": "Atlantic",
+"tz_offset": "4"
+}
+]
