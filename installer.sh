@@ -66,7 +66,7 @@ if [ "$MODE" == "1" ]; then
         unzip -d /opt /opt/bbc-radio-relay.zip
         cp -r /opt/BBC-Radio-Relay-testing/radio-relay/* $BASE_FOLDER
         cp -r /opt/BBC-Radio-Relay-testing/radio-player/* $BASE_FOLDER/www
-        cp -r /opt/BBC-Radio-Relay-testing/config/* $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-testing/config $BASE_FOLDER
     fi
 
     mv $BASE_FOLDER/config/nginx-default.conf /etc/nginx/sites-available/default
