@@ -34,7 +34,7 @@ DOWNLOADER=$BASE_FOLDER/run-scripts/downloader.sh
 RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip"
-XTR_PACKAGES="ffmpeg ices2 icecast2 at"
+XTR_PACKAGES="ffmpeg ices2 icecast2 at nginx"
 STABLE_VERSION=1.1.1
 
 # install/uninstall packages, files, and folders
@@ -52,7 +52,8 @@ if [ "$MODE" == "1" ]; then
     pip install jinja2
     # files and folders
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
-    mkdir -p $BASE_FOLDER/www
+    mkdir -p $BASE_FOLDER/www/stations
+    mkdir -p $BASE_FOLDER/www/media # in anticipation of downloader script
 
     if [ "$VERSION" == "1" ]; then
         wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/tags/v${STABLE_VERSION}.zip" -O /opt/bbc-radio-relay.zip
@@ -67,6 +68,7 @@ if [ "$MODE" == "1" ]; then
         cp -r /opt/BBC-Radio-Relay-testing/radio-player/* $BASE_FOLDER/www
     fi
 
+    mv $BASE_FOLDER/config/nginx-default.conf /etc/nginx/sites-available/default
     cd $BASE_FOLDER/www
     python3 $BASE_FOLDER/www/generate.py
     cd /root
@@ -74,6 +76,7 @@ if [ "$MODE" == "1" ]; then
 elif [ "$MODE" == "2" ]; then
     # stop services if running and remove uncommon packages
     systemctl stop icecast2
+    systemctl stop nginx
     ps axf | grep downloader | awk '{print "kill -9 " $1}' | sh || true
     ps axf | grep restart-service | awk '{print "kill -9 " $1}' | sh || true
     ps axf | grep ffmpeg | awk '{print "kill -9 " $1}' | sh || true
@@ -105,11 +108,14 @@ if [ "$MODE" == "1" ]; then
     chmod +X $BASE_FOLDER
     chmod -R +wx $KILL_FFMPEG $PURGE_OGG $RESYNC $DOWNLOADER $RESTART_SERVICE $START_RADIO
     sed -i 's|BASE_FOLDER=|BASE_FOLDER='"$BASE_FOLDER"'|' $KILL_FFMPEG $PURGE_OGG $RESYNC $DOWNLOADER $RESTART_SERVICE $START_RADIO
-    
+    chown -R root:www-data $BASE_FOLDER/www # for NGINX permissions
+    chmod -R 0755 $BASE_FOLDER/www # for NGINX permissions
+
 elif [ "$MODE" == "2" ]; then
     # remove as much of the installation as possible
     rm -rf /etc/icecast2 /var/log/ices /var/log/icecast2 $BASE_FOLDER 
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
+    rm -rf /etc/nginx
 else
     echo "Invalid mode."
 fi
@@ -166,7 +172,8 @@ fi
 if [ "$MODE" == "1" ]; then
     #
     systemctl start icecast2 && systemctl enable icecast2
-    dialog --yesno "Select 'Yes' to reboot. It will take approximately 30-60 seconds for the test streams to be available on port 8000." 0 0 && reboot || exit 0
+    systemctl reload nginx && systemctl start nginx && systemctl enable nginx
+    dialog --yesno "Select 'Yes' to reboot. It will take approximately 30-60 seconds for the test streams to be available on port 8080." 0 0 && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
     dialog --yesno "Select 'Yes' to delete this script." 0 0 && rm -- "$0" || exit 0
