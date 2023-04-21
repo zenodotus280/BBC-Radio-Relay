@@ -20,17 +20,12 @@ if ! command -v apt >/dev/null 2>&1; then
     exit 1
 fi
 
-apt update
+apt update && apt install wget dialog -y
 
 # Check if bash is installed
 if ! command -v bash >/dev/null 2>&1; then
     echo "Bash is not installed. Please install bash before running this script."
     exit 1
-fi
-
-# Check if wget is available
-if ! command -v wget >/dev/null 2>&1; then
-    apt install wget dialog -y
 fi
 
 # Check if github.com is reachable
@@ -81,7 +76,7 @@ if [ "$MODE" == "1" ]; then
     dialog --yesno "There are some copyright concerns with this project. You are running this service at your own risk -- do you agree?" 0 0 && clear || exit 0
 VERSION=$(dialog --title "Please choose the version." --menu "Script Mode" 0 0 0 \
   1 "Stable" \
-  2 "Testing" \
+  2 "Beta" \
   3>&1 1>&2 2>&3 3>&-); clear # open file descriptor, stdout to sterr, sterr to new file descriptor, then close file descriptor
 fi
 
@@ -102,7 +97,6 @@ STABLE_VERSION=1.1.1
 
 if [ "$MODE" == "1" ]; then
     # install all packages
-    apt update
     apt upgrade -yq
     for package in "${STD_PACKAGES[@]}"; do
         apt install $package -y
