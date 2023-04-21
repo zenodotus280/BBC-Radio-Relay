@@ -24,7 +24,12 @@ For all six stations across 5 time zones you will need about 1 core (more for cl
 If you have a VM or LXC container (or an interactive Docker container) you can simply 'pipe-to-bash' the install script:
 `wget https://raw.githubusercontent.com/zenodotus280/BBC-Radio-Relay/main/installer.sh | bash`
 
-This is a minimally interactive install script that will start the Icecast2 back-end on port 8000 and the static front-end using Python on port 80. There are only two choices to make in this version: Select "no" when asked to configure Icecast2 and "yes" at the end of the install script to test that the Python server has the correct permissions to run on a privlileged port (common error with Proxmox LXCs).
+This is a minimally interactive install script that will start:
+- Icecast2 on port 8000 to make the audio streams available
+- Nginx on port 80 for the HTML front-end
+- Nginx on port 8080 as a reverse proxy to access port 8000
+
+*Select "no" when asked to configure Icecast2.*
 
 *Please read the script*. It expects to operate in an isolated environment and by default creates cronjobs that will even reboot the server every week - you've been warned!
 
