@@ -22,12 +22,6 @@ fi
 
 apt update && apt install wget dialog -y
 
-# Check if bash is installed
-if ! command -v bash >/dev/null 2>&1; then
-    echo "Bash is not installed. Please install bash before running this script."
-    exit 1
-fi
-
 # Check if github.com is reachable
 if ! wget -q --spider https://github.com 2>/dev/null; then
     echo "Unable to reach github.com. Please check your internet connection."
