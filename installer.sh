@@ -2,11 +2,72 @@
 clear
 set -eu
 # housekeeping
-if [ "$(id -u)" -ne 0 ]
-  then echo "Please run as root."
-  exit
+# Check if script is running as root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root."
+    exit 1
 fi
-apt install dialog -y
+
+# Check if systemd is available
+if ! command -v systemctl >/dev/null 2>&1; then
+    echo "systemd is not available. This script requires systemd as the init system."
+    exit 1
+fi
+
+# Check if apt is the package manager
+if ! command -v apt >/dev/null 2>&1; then
+    echo "apt is not available. This script requires apt as the package manager."
+    exit 1
+fi
+
+apt update
+
+# Check if bash is installed
+if ! command -v bash >/dev/null 2>&1; then
+    echo "Bash is not installed. Please install bash before running this script."
+    exit 1
+fi
+
+# Check if wget is available
+if ! command -v wget >/dev/null 2>&1; then
+    apt install -y wget
+fi
+
+# Check if github.com is reachable
+if ! wget -q --spider https://github.com 2>/dev/null; then
+    echo "Unable to reach github.com. Please check your internet connection."
+    exit 1
+fi
+
+# Check for available disk space (25 GB)
+required_disk_space=$((25 * 1024))  # 25 GB in MB
+available_disk_space=$(df -m --output=avail / | awk 'NR==2 {print $1}')
+if [ "$available_disk_space" -lt "$required_disk_space" ]; then
+    echo "Insufficient disk space. At least 25 GB of free disk space will be required."
+    exit 0
+fi
+
+# Optional: Check if iptables is available
+if command -v iptables >/dev/null 2>&1; then
+
+echo "iptables is available. Adding firewall rules..."
+
+# Allow incoming traffic on ports 80 and 8080
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+
+# Save iptables rules to persist across reboots
+iptables-save > /etc/iptables/rules.v4
+
+# For IPv6:
+# ip6tables -A INPUT -p tcp --dport 80 -j ACCEPT
+# ip6tables -A INPUT -p tcp --dport 8080 -j ACCEPT
+# ip6tables-save > /etc/iptables/rules.v6
+
+else
+    echo "iptables is not available. Skipping firewall rules..."
+fi
+
 cd /root
 
 dialog --title "Welcome! Here be dragons..." --msgbox "This script can install or uninstall the service and most related packages. It will also edit cron jobs and do many other things. I don't really know what I'm doing so I would only run this in a Virtual Machine if I were you... Have fun!" 0 0; clear
@@ -62,7 +123,7 @@ if [ "$MODE" == "1" ]; then
         cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/radio-player/* $BASE_FOLDER/www
 
     elif [ "$VERSION" == "2" ]; then
-        wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/testing.zip" -O /opt/bbc-radio-relay.zip
+        wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/main.zip" -O /opt/bbc-radio-relay.zip
         unzip -d /opt /opt/bbc-radio-relay.zip
         cp -r /opt/BBC-Radio-Relay-testing/radio-relay/* $BASE_FOLDER
         cp -r /opt/BBC-Radio-Relay-testing/radio-player/* $BASE_FOLDER/www
@@ -175,7 +236,7 @@ if [ "$MODE" == "1" ]; then
     bash $RESYNC
     systemctl reload nginx && systemctl start nginx
     dialog --title "WebUI Test" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n$(hostname -I)" 0 0
-    dialog --yesno "Select 'Yes' to reboot. It will take approximately 30 seconds for the test streams to be available on port 8000. The test streams will be disabled after rebooting. \n\n$(hostname -I)" 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
+    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000. The test streams will be disabled after rebooting. \n\n$(hostname -I)\n\nSelect 'Yes' whn you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
     dialog --yesno "Select 'Yes' to delete this script." 0 0 && rm -- "$0" || exit 0
