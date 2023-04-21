@@ -113,9 +113,9 @@ if [ "$MODE" == "1" ]; then
     elif [ "$VERSION" == "2" ]; then
         wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/main.zip" -O /opt/bbc-radio-relay.zip
         unzip -d /opt /opt/bbc-radio-relay.zip
-        cp -r /opt/BBC-Radio-Relay-testing/radio-relay/* $BASE_FOLDER
-        cp -r /opt/BBC-Radio-Relay-testing/radio-player/* $BASE_FOLDER/www
-        cp -r /opt/BBC-Radio-Relay-testing/config $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-main/radio-relay/* $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-main/radio-player/* $BASE_FOLDER/www
+        cp -r /opt/BBC-Radio-Relay-main/config $BASE_FOLDER
     fi
 
     mv $BASE_FOLDER/config/nginx-default.conf /etc/nginx/sites-available/default
