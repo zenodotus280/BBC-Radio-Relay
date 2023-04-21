@@ -54,7 +54,7 @@
             preload="auto" playsinline></audio>
         <script>
             var player = document.getElementById("player");
-            player.src = location.origin + ":8000/{{ station.stn_name }}/{{ station.tz_offset }}";
+            player.src = location.origin + ":8080/{{ station.stn_name }}/{{ station.tz_offset }}";
         </script>
 
         <button id="vol_minus" class="button-raised vol_con" style="display: none" role="button" onclick="

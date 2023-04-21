@@ -85,10 +85,4 @@ rm $BASE_FOLDER/audio/*6music*
 
 $BASE_FOLDER/run-scripts/start_radio.sh "BBC Radio 6" 6music "Alternative"
 
-working_dir=$0
-base_dir=$(dirname "$working_dir")
-echo "python3 -m http.server 80 --directory \"$base_dir/../www\"" | at now &
-
-# The version below is for delaying the HTTP server until the last time zone comes alive.
-# Useful for High Availibility with HAProxy since every health check will fail until it is ready.
-# echo "python3 -m http.server 80 --directory \"$base_dir/../www\"" | at now + 8 hours &
+echo "systemctl start nginx" | at now + 8 hours

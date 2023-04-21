@@ -2,11 +2,72 @@
 clear
 set -eu
 # housekeeping
-if [ "$(id -u)" -ne 0 ]
-  then echo "Please run as root."
-  exit
+# Check if script is running as root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root."
+    exit 1
 fi
-apt install dialog -y
+
+# Check if systemd is available
+if ! command -v systemctl >/dev/null 2>&1; then
+    echo "systemd is not available. This script requires systemd as the init system."
+    exit 1
+fi
+
+# Check if apt is the package manager
+if ! command -v apt >/dev/null 2>&1; then
+    echo "apt is not available. This script requires apt as the package manager."
+    exit 1
+fi
+
+apt update
+
+# Check if bash is installed
+if ! command -v bash >/dev/null 2>&1; then
+    echo "Bash is not installed. Please install bash before running this script."
+    exit 1
+fi
+
+# Check if wget is available
+if ! command -v wget >/dev/null 2>&1; then
+    apt install wget dialog -y
+fi
+
+# Check if github.com is reachable
+if ! wget -q --spider https://github.com 2>/dev/null; then
+    echo "Unable to reach github.com. Please check your internet connection."
+    exit 1
+fi
+
+# Check for available disk space (25 GB)
+required_disk_space=$((25 * 1024))  # 25 GB in MB
+available_disk_space=$(df -m --output=avail / | awk 'NR==2 {print $1}')
+if [ "$available_disk_space" -lt "$required_disk_space" ]; then
+    echo "Insufficient disk space. At least 25 GB of free disk space will be required."
+    exit 0
+fi
+
+# Optional: Check if iptables is available
+if command -v iptables >/dev/null 2>&1; then
+
+echo "iptables is available. Adding firewall rules..."
+
+# Allow incoming traffic on ports 80 and 8080
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+
+# Save iptables rules to persist across reboots
+iptables-save > /etc/iptables/rules.v4
+
+# For IPv6:
+# ip6tables -A INPUT -p tcp --dport 80 -j ACCEPT
+# ip6tables -A INPUT -p tcp --dport 8080 -j ACCEPT
+# ip6tables-save > /etc/iptables/rules.v6
+
+else
+    echo "iptables is not available. Skipping firewall rules..."
+fi
+
 cd /root
 
 dialog --title "Welcome! Here be dragons..." --msgbox "This script can install or uninstall the service and most related packages. It will also edit cron jobs and do many other things. I don't really know what I'm doing so I would only run this in a Virtual Machine if I were you... Have fun!" 0 0; clear
@@ -34,7 +95,7 @@ DOWNLOADER=$BASE_FOLDER/run-scripts/downloader.sh
 RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip"
-XTR_PACKAGES="ffmpeg ices2 icecast2 at"
+XTR_PACKAGES="ffmpeg ices2 icecast2 at nginx"
 STABLE_VERSION=1.1.1
 
 # install/uninstall packages, files, and folders
@@ -52,7 +113,8 @@ if [ "$MODE" == "1" ]; then
     pip install jinja2
     # files and folders
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
-    mkdir -p $BASE_FOLDER/www
+    mkdir -pv $BASE_FOLDER/www/stations
+    mkdir -pv $BASE_FOLDER/www/media # in anticipation of downloader script
 
     if [ "$VERSION" == "1" ]; then
         wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/tags/v${STABLE_VERSION}.zip" -O /opt/bbc-radio-relay.zip
@@ -61,12 +123,14 @@ if [ "$MODE" == "1" ]; then
         cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/radio-player/* $BASE_FOLDER/www
 
     elif [ "$VERSION" == "2" ]; then
-        wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/testing.zip" -O /opt/bbc-radio-relay.zip
+        wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/main.zip" -O /opt/bbc-radio-relay.zip
         unzip -d /opt /opt/bbc-radio-relay.zip
         cp -r /opt/BBC-Radio-Relay-testing/radio-relay/* $BASE_FOLDER
         cp -r /opt/BBC-Radio-Relay-testing/radio-player/* $BASE_FOLDER/www
+        cp -r /opt/BBC-Radio-Relay-testing/config $BASE_FOLDER
     fi
 
+    mv $BASE_FOLDER/config/nginx-default.conf /etc/nginx/sites-available/default
     cd $BASE_FOLDER/www
     python3 $BASE_FOLDER/www/generate.py
     cd /root
@@ -74,6 +138,7 @@ if [ "$MODE" == "1" ]; then
 elif [ "$MODE" == "2" ]; then
     # stop services if running and remove uncommon packages
     systemctl stop icecast2
+    systemctl stop nginx
     ps axf | grep downloader | awk '{print "kill -9 " $1}' | sh || true
     ps axf | grep restart-service | awk '{print "kill -9 " $1}' | sh || true
     ps axf | grep ffmpeg | awk '{print "kill -9 " $1}' | sh || true
@@ -105,7 +170,9 @@ if [ "$MODE" == "1" ]; then
     chmod +X $BASE_FOLDER
     chmod -R +wx $KILL_FFMPEG $PURGE_OGG $RESYNC $DOWNLOADER $RESTART_SERVICE $START_RADIO
     sed -i 's|BASE_FOLDER=|BASE_FOLDER='"$BASE_FOLDER"'|' $KILL_FFMPEG $PURGE_OGG $RESYNC $DOWNLOADER $RESTART_SERVICE $START_RADIO
-    
+    chown -R root:www-data $BASE_FOLDER/www # for NGINX permissions
+    chmod -R 0755 $BASE_FOLDER/www # for NGINX permissions
+
 elif [ "$MODE" == "2" ]; then
     # remove as much of the installation as possible
     rm -rf /etc/icecast2 /var/log/ices /var/log/icecast2 $BASE_FOLDER 
@@ -166,7 +233,10 @@ fi
 if [ "$MODE" == "1" ]; then
     #
     systemctl start icecast2 && systemctl enable icecast2
-    dialog --yesno "Select 'Yes' to reboot. It will take approximately 30-60 seconds for the test streams to be available on port 8000." 0 0 && reboot || exit 0
+    bash $RESYNC
+    systemctl reload nginx && systemctl start nginx
+    dialog --title "WebUI Test" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n$(hostname -I)" 0 0
+    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000. The test streams will be disabled after rebooting. \n\n$(hostname -I)\n\nSelect 'Yes' whn you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
     dialog --yesno "Select 'Yes' to delete this script." 0 0 && rm -- "$0" || exit 0
