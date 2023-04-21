@@ -30,7 +30,7 @@ fi
 
 # Check if wget is available
 if ! command -v wget >/dev/null 2>&1; then
-    apt install -y wget
+    apt install wget dialog -y
 fi
 
 # Check if github.com is reachable
