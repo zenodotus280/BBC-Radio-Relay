@@ -116,7 +116,6 @@ elif [ "$MODE" == "2" ]; then
     # remove as much of the installation as possible
     rm -rf /etc/icecast2 /var/log/ices /var/log/icecast2 $BASE_FOLDER 
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
-    rm -rf /etc/nginx
 else
     echo "Invalid mode."
 fi
@@ -173,7 +172,8 @@ fi
 if [ "$MODE" == "1" ]; then
     #
     systemctl start icecast2 && systemctl enable icecast2
-    systemctl reload nginx && systemctl start nginx && systemctl enable nginx
+    systemctl reload nginx && systemctl start nginx
+    dialog --title "" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n $(hostname -I)" 0 0
     dialog --yesno "Select 'Yes' to reboot. It will take approximately 30-60 seconds for the test streams to be available on port 8080." 0 0 && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
