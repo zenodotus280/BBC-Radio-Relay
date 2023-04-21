@@ -52,8 +52,9 @@ if [ "$MODE" == "1" ]; then
     pip install jinja2
     # files and folders
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
-    mkdir -p $BASE_FOLDER/www/stations
-    mkdir -p $BASE_FOLDER/www/media # in anticipation of downloader script
+    mkdir $BASE_FOLDER/www
+    mkdir $BASE_FOLDER/www/stations
+    mkdir $BASE_FOLDER/www/media # in anticipation of downloader script
 
     if [ "$VERSION" == "1" ]; then
         wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/tags/v${STABLE_VERSION}.zip" -O /opt/bbc-radio-relay.zip
@@ -173,8 +174,8 @@ if [ "$MODE" == "1" ]; then
     #
     systemctl start icecast2 && systemctl enable icecast2
     systemctl reload nginx && systemctl start nginx
-    dialog --title "" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n $(hostname -I)" 0 0
-    dialog --yesno "Select 'Yes' to reboot. It will take approximately 30-60 seconds for the test streams to be available on port 8080." 0 0 && reboot || exit 0
+    dialog --title "" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n$(hostname -I)" 0 0
+    dialog --yesno "Select 'Yes' to reboot. It will take approximately 30-60 seconds for the test streams to be available after rebooting on port 8080 on one of the following IP addresses: \n\n$(hostname -I)" 0 0 && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
     dialog --yesno "Select 'Yes' to delete this script." 0 0 && rm -- "$0" || exit 0
