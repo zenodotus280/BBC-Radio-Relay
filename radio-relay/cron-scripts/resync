@@ -84,5 +84,3 @@ ps axf | grep ices2 | grep 6music | awk '{print "kill -9 " $1}' | sh
 rm $BASE_FOLDER/audio/*6music*
 
 $BASE_FOLDER/run-scripts/start_radio.sh "BBC Radio 6" 6music "Alternative"
-
-echo "systemctl start nginx" | at now + 8 hours

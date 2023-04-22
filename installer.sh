@@ -181,8 +181,8 @@ if [ "$MODE" == "1" ] || [ "$MODE" == "2" ]; then
         #purge_ogg:   clean up day-old audio files
         #             reboot at 6am weekly to remain in sync
         #resync:      bootstrap the relay on boot
-        #             currently redundant since service is already enabled during installation with systemd
-    CRON=("0 */12 * * * sh $KILL_FFMPEG" "0 */1 * * * sh $PURGE_OGG" "0 6 * * 1 apt upgrade -y; systemctl reboot" "@reboot sh $RESYNC" "@reboot /etc/init.d/icecast2 start")
+        #             wait before providing webUI so healthchecks succeed with HA reverse proxy
+    CRON=("0 */12 * * * sh $KILL_FFMPEG" "0 */1 * * * sh $PURGE_OGG" "0 6 * * 1 apt upgrade -y; systemctl reboot" "@reboot sh $RESYNC" "@reboot sleep 8h && systemctl start nginx")
 
     # Escape the asterisks
     CRON=("${CRON[@]/\*/\*}")
@@ -220,11 +220,11 @@ fi
 # start
 if [ "$MODE" == "1" ]; then
     #
-    systemctl start icecast2 && systemctl enable icecast2
+    systemctl systemctl enable --now icecast2
     bash $RESYNC
-    systemctl reload nginx && systemctl start nginx
+    systemctl disable nginx && systemctl reload nginx && systemctl start nginx
     dialog --title "WebUI Test" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n$(hostname -I)" 0 0
-    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000. The test streams will be disabled after rebooting. \n\n$(hostname -I)\n\nSelect 'Yes' whn you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
+    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000. The test streams will be disabled after rebooting. \n\n$(hostname -I)\n\nSelect 'Yes' when you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
     dialog --yesno "Select 'Yes' to delete this script." 0 0 && rm -- "$0" || exit 0
