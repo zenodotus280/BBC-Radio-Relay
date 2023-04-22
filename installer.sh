@@ -8,6 +8,14 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# Check for available disk space (25 GB)
+required_disk_space=$((25 * 1024))  # 25 GB in MB
+available_disk_space=$(df -m --output=avail / | awk 'NR==2 {print $1}')
+if [ "$available_disk_space" -lt "$required_disk_space" ]; then
+    echo "Insufficient disk space. At least 25 GB of free disk space will be required."
+    exit 0
+fi
+
 # Check if systemd is available
 if ! command -v systemctl >/dev/null 2>&1; then
     echo "systemd is not available. This script requires systemd as the init system."
@@ -26,14 +34,6 @@ apt update && apt install wget dialog -y
 if ! wget -q --spider https://github.com 2>/dev/null; then
     echo "Unable to reach github.com. Please check your internet connection."
     exit 1
-fi
-
-# Check for available disk space (25 GB)
-required_disk_space=$((25 * 1024))  # 25 GB in MB
-available_disk_space=$(df -m --output=avail / | awk 'NR==2 {print $1}')
-if [ "$available_disk_space" -lt "$required_disk_space" ]; then
-    echo "Insufficient disk space. At least 25 GB of free disk space will be required."
-    exit 0
 fi
 
 cd /root
@@ -63,7 +63,7 @@ DOWNLOADER=$BASE_FOLDER/run-scripts/downloader.sh
 RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip"
-XTR_PACKAGES="ffmpeg ices2 icecast2 at nginx"
+XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
 STABLE_VERSION=1.1.1
 
 # install/uninstall packages, files, and folders
@@ -144,6 +144,7 @@ elif [ "$MODE" == "2" ]; then
     # remove as much of the installation as possible
     rm -rf /etc/icecast2 /var/log/ices /var/log/icecast2 $BASE_FOLDER 
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
+    rm -rf /srv/bbc-rr/*
 else
     echo "Invalid mode."
 fi
@@ -206,8 +207,8 @@ if [ "$MODE" == "1" ]; then
     systemctl start icecast2
     bash $RESYNC
     systemctl stop nginx && systemctl disable nginx && systemctl start nginx
-    dialog --title "WebUI Test" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n$(hostname -I)" 0 0
-    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000. The test streams will be disabled after rebooting. \n\n$(hostname -I)\n\nSelect 'Yes' when you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
+    dialog --title "Pre-Reboot Test" --msgbox "The WebUI runs on port 80 and the reverse proxy for the audio runs on port 8080 and redirects to Icecast on port 8000. will be available 8 hours after starting the streams by default. Check that ports 80, 8080, and 8000 are accessible before continuing. There is an 8-hour delay for the WebUI and reverse proxy because it will take 8 hours for the streams to populate." 0 0
+    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000 (and by extension, port 8080). The test streams will be disabled after rebooting.\n\nSelect 'Yes' when you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
     dialog --yesno "Select 'Yes' to delete this script." 0 0 && rm -- "$0" || exit 0
