@@ -36,27 +36,6 @@ if [ "$available_disk_space" -lt "$required_disk_space" ]; then
     exit 0
 fi
 
-# Optional: Check if iptables is available
-if command -v iptables >/dev/null 2>&1; then
-
-echo "iptables is available. Adding firewall rules..."
-
-# Allow incoming traffic on ports 80 and 8080
-iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
-
-# Save iptables rules to persist across reboots
-iptables-save > /etc/iptables/rules.v4
-
-# For IPv6:
-# ip6tables -A INPUT -p tcp --dport 80 -j ACCEPT
-# ip6tables -A INPUT -p tcp --dport 8080 -j ACCEPT
-# ip6tables-save > /etc/iptables/rules.v6
-
-else
-    echo "iptables is not available. Skipping firewall rules..."
-fi
-
 cd /root
 
 dialog --title "Welcome! Here be dragons..." --msgbox "This script can install or uninstall the service and most related packages. It will also edit cron jobs and do many other things. I don't really know what I'm doing so I would only run this in a Virtual Machine if I were you... Have fun!" 0 0; clear
