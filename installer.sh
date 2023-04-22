@@ -220,7 +220,7 @@ fi
 # start
 if [ "$MODE" == "1" ]; then
     #
-    systemctl systemctl enable --now icecast2
+    systemctl enable --now icecast2
     bash $RESYNC
     systemctl disable nginx && systemctl reload nginx && systemctl start nginx
     dialog --title "WebUI Test" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n$(hostname -I)" 0 0
