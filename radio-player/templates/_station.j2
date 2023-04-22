@@ -77,31 +77,36 @@
         player.volume += 0.1;
     ">+</button>
 
-        <button id="start-button" class="button-raised" role="button" disabled onclick="
-                var player = document.getElementById('player');
-                player.pause();
-                var duration = Math.max((player.duration - 3), 0);
-                player.currentTime = duration;
+<button id="start-button" class="button-raised" role="button" style="display: none;">Tune in!</button>
+<button id="loading-button" class="button-raised" role="button" style="background-color: chocolate;" disabled>Loading . . .</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var isMacOriOS = /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if (isMacOriOS) {
+            document.getElementById('start-button').style.display = 'block';
+        } else {
+            document.getElementById('loading-button').style.display = 'block';
+
+            var player = document.getElementById('player');
+            player.addEventListener('canplaythrough', function() {
+                setTimeout(function() {
+                    document.getElementById('start-button').style.display = 'block';
+                    document.getElementById('loading-button').style.display = 'none';
+                }, 0);
+            });
+
+            document.getElementById('start-button').addEventListener('click', function() {
                 player.play();
                 document.querySelectorAll('.vol_con').forEach(function(element) {
-                element.style.display = 'block';
+                    element.style.display = 'block';
                 });
-                this.style.display = 'none'
-
-                ">Loading . . .</button>
-    
-        <script>
-            var player = document.getElementById('player');
-            var start = document.getElementById('start-button');
-            player.addEventListener('canplaythrough', function () {
-
-                setTimeout(function () {
-                    start.removeAttribute('disabled');
-                    start.textContent = "Tune in!";
-                }, 0);
-
+                this.style.display = 'none';
             });
-        </script>
+        }
+    });
+</script>
     </div>
 </div>
 </div>
