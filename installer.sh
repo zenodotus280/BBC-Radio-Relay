@@ -198,10 +198,14 @@ fi
 
 # start
 if [ "$MODE" == "1" ]; then
-    #
-    systemctl enable --now icecast2
+    # to appease Ubuntu when enabling the icecast2 service
+    sed -i 's/^#\s*\(en_US ISO-8859-1\)/\1/' /etc/locale.gen
+    locale-gen
+
+    systemctl enable icecast2
+    systemctl start icecast2
     bash $RESYNC
-    systemctl disable --now nginx && systemctl start nginx
+    systemctl stop nginx && systemctl disable nginx && systemctl start nginx
     dialog --title "WebUI Test" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n$(hostname -I)" 0 0
     dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000. The test streams will be disabled after rebooting. \n\n$(hostname -I)\n\nSelect 'Yes' when you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
