@@ -64,7 +64,7 @@ RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip"
 XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
-STABLE_VERSION=1.1.1
+STABLE_VERSION=1.2.0
 
 # install/uninstall packages, files, and folders
 
@@ -88,6 +88,7 @@ if [ "$MODE" == "1" ]; then
         unzip -d /opt /opt/bbc-radio-relay.zip
         cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/radio-relay/* $BASE_FOLDER
         cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/radio-player/* $BASE_FOLDER/www
+        cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/config $BASE_FOLDER
 
     elif [ "$VERSION" == "2" ]; then
         wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/main.zip" -O /opt/bbc-radio-relay.zip
