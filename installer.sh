@@ -8,6 +8,14 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# Check for available disk space (25 GB)
+required_disk_space=$((25 * 1024))  # 25 GB in MB
+available_disk_space=$(df -m --output=avail / | awk 'NR==2 {print $1}')
+if [ "$available_disk_space" -lt "$required_disk_space" ]; then
+    echo "Insufficient disk space. At least 25 GB of free disk space will be required."
+    exit 0
+fi
+
 # Check if systemd is available
 if ! command -v systemctl >/dev/null 2>&1; then
     echo "systemd is not available. This script requires systemd as the init system."
@@ -20,52 +28,12 @@ if ! command -v apt >/dev/null 2>&1; then
     exit 1
 fi
 
-apt update
-
-# Check if bash is installed
-if ! command -v bash >/dev/null 2>&1; then
-    echo "Bash is not installed. Please install bash before running this script."
-    exit 1
-fi
-
-# Check if wget is available
-if ! command -v wget >/dev/null 2>&1; then
-    apt install wget dialog -y
-fi
+apt update && apt install wget dialog -y
 
 # Check if github.com is reachable
 if ! wget -q --spider https://github.com 2>/dev/null; then
     echo "Unable to reach github.com. Please check your internet connection."
     exit 1
-fi
-
-# Check for available disk space (25 GB)
-required_disk_space=$((25 * 1024))  # 25 GB in MB
-available_disk_space=$(df -m --output=avail / | awk 'NR==2 {print $1}')
-if [ "$available_disk_space" -lt "$required_disk_space" ]; then
-    echo "Insufficient disk space. At least 25 GB of free disk space will be required."
-    exit 0
-fi
-
-# Optional: Check if iptables is available
-if command -v iptables >/dev/null 2>&1; then
-
-echo "iptables is available. Adding firewall rules..."
-
-# Allow incoming traffic on ports 80 and 8080
-iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
-
-# Save iptables rules to persist across reboots
-iptables-save > /etc/iptables/rules.v4
-
-# For IPv6:
-# ip6tables -A INPUT -p tcp --dport 80 -j ACCEPT
-# ip6tables -A INPUT -p tcp --dport 8080 -j ACCEPT
-# ip6tables-save > /etc/iptables/rules.v6
-
-else
-    echo "iptables is not available. Skipping firewall rules..."
 fi
 
 cd /root
@@ -81,7 +49,7 @@ if [ "$MODE" == "1" ]; then
     dialog --yesno "There are some copyright concerns with this project. You are running this service at your own risk -- do you agree?" 0 0 && clear || exit 0
 VERSION=$(dialog --title "Please choose the version." --menu "Script Mode" 0 0 0 \
   1 "Stable" \
-  2 "Testing" \
+  2 "Beta" \
   3>&1 1>&2 2>&3 3>&-); clear # open file descriptor, stdout to sterr, sterr to new file descriptor, then close file descriptor
 fi
 
@@ -95,14 +63,13 @@ DOWNLOADER=$BASE_FOLDER/run-scripts/downloader.sh
 RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip"
-XTR_PACKAGES="ffmpeg ices2 icecast2 at nginx"
-STABLE_VERSION=1.1.1
+XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
+STABLE_VERSION=1.2.0
 
 # install/uninstall packages, files, and folders
 
 if [ "$MODE" == "1" ]; then
     # install all packages
-    apt update
     apt upgrade -yq
     for package in "${STD_PACKAGES[@]}"; do
         apt install $package -y
@@ -121,13 +88,14 @@ if [ "$MODE" == "1" ]; then
         unzip -d /opt /opt/bbc-radio-relay.zip
         cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/radio-relay/* $BASE_FOLDER
         cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/radio-player/* $BASE_FOLDER/www
+        cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/config $BASE_FOLDER
 
     elif [ "$VERSION" == "2" ]; then
         wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/main.zip" -O /opt/bbc-radio-relay.zip
         unzip -d /opt /opt/bbc-radio-relay.zip
-        cp -r /opt/BBC-Radio-Relay-testing/radio-relay/* $BASE_FOLDER
-        cp -r /opt/BBC-Radio-Relay-testing/radio-player/* $BASE_FOLDER/www
-        cp -r /opt/BBC-Radio-Relay-testing/config $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-main/radio-relay/* $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-main/radio-player/* $BASE_FOLDER/www
+        cp -r /opt/BBC-Radio-Relay-main/config $BASE_FOLDER
     fi
 
     mv $BASE_FOLDER/config/nginx-default.conf /etc/nginx/sites-available/default
@@ -177,6 +145,7 @@ elif [ "$MODE" == "2" ]; then
     # remove as much of the installation as possible
     rm -rf /etc/icecast2 /var/log/ices /var/log/icecast2 $BASE_FOLDER 
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
+    rm -rf /srv/bbc-rr/*
 else
     echo "Invalid mode."
 fi
@@ -193,8 +162,8 @@ if [ "$MODE" == "1" ] || [ "$MODE" == "2" ]; then
         #purge_ogg:   clean up day-old audio files
         #             reboot at 6am weekly to remain in sync
         #resync:      bootstrap the relay on boot
-        #             currently redundant since service is already enabled during installation with systemd
-    CRON=("0 */12 * * * sh $KILL_FFMPEG" "0 */1 * * * sh $PURGE_OGG" "0 6 * * 1 apt upgrade -y; systemctl reboot" "@reboot sh $RESYNC" "@reboot /etc/init.d/icecast2 start")
+        #             wait before providing webUI so healthchecks succeed with HA reverse proxy
+    CRON=("0 */12 * * * sh $KILL_FFMPEG" "0 */1 * * * sh $PURGE_OGG" "0 6 * * 1 apt upgrade -y; systemctl reboot" "@reboot sh $RESYNC" "@reboot sleep 8h && systemctl start nginx")
 
     # Escape the asterisks
     CRON=("${CRON[@]/\*/\*}")
@@ -231,12 +200,16 @@ fi
 
 # start
 if [ "$MODE" == "1" ]; then
-    #
-    systemctl start icecast2 && systemctl enable icecast2
+    # to appease Ubuntu when enabling the icecast2 service
+    sed -i 's/^#\s*\(en_US ISO-8859-1\)/\1/' /etc/locale.gen
+    locale-gen
+
+    systemctl enable icecast2
+    systemctl start icecast2
     bash $RESYNC
-    systemctl reload nginx && systemctl start nginx
-    dialog --title "WebUI Test" --msgbox "The WebUI will be available 8 hours after starting the streams by default. To verify that the WebUI will function as expected, go to port 80 on one of the follow IP addresses: \n\n$(hostname -I)" 0 0
-    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000. The test streams will be disabled after rebooting. \n\n$(hostname -I)\n\nSelect 'Yes' whn you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
+    systemctl stop nginx && systemctl disable nginx && systemctl start nginx
+    dialog --title "Pre-Reboot Test" --msgbox "The WebUI runs on port 80 and the reverse proxy for the audio runs on port 8080 and redirects to Icecast on port 8000. will be available 8 hours after starting the streams by default. Check that ports 80, 8080, and 8000 are accessible before continuing. There is an 8-hour delay for the WebUI and reverse proxy because it will take 8 hours for the streams to populate." 0 0
+    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000 (and by extension, port 8080). The test streams will be disabled after rebooting.\n\nSelect 'Yes' when you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
     dialog --yesno "Select 'Yes' to delete this script." 0 0 && rm -- "$0" || exit 0
