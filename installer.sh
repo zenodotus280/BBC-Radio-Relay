@@ -8,14 +8,6 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# Check for available disk space (25 GB)
-required_disk_space=$((25 * 1024))  # 25 GB in MB
-available_disk_space=$(df -m --output=avail / | awk 'NR==2 {print $1}')
-if [ "$available_disk_space" -lt "$required_disk_space" ]; then
-    echo "Insufficient disk space. At least 25 GB of free disk space will be required."
-    exit 0
-fi
-
 # Check if systemd is available
 if ! command -v systemctl >/dev/null 2>&1; then
     echo "systemd is not available. This script requires systemd as the init system."
@@ -28,10 +20,27 @@ if ! command -v apt >/dev/null 2>&1; then
     exit 1
 fi
 
-apt update && apt install wget dialog -y
+# Check for available disk space (25 GB)
+required_disk_space=$((25 * 1024))  # 25 GB in MB
+available_disk_space=$(df -m --output=avail / | awk 'NR==2 {print $1}')
+if [ "$available_disk_space" -lt "$required_disk_space" ]; then
+    echo "Insufficient disk space. At least 25 GB of free disk space will be required."
+    exit 0
+fi
+
+# to appease Ubuntu when enabling the icecast2 service
+{
+    echo 'export LANG="en_US.utf8"'
+    echo 'export LANGUAGE="en_US.utf8"'
+    echo 'export LC_ALL="en_US.utf8"'
+} >> ~/.bashrc
+source ~/.bashrc
+
+apt update
+apt install wget dialog -y
 
 # Check if github.com is reachable
-if ! wget -q --spider https://github.com 2>/dev/null; then
+if ! wget -q https://github.com 2>/dev/null; then
     echo "Unable to reach github.com. Please check your internet connection."
     exit 1
 fi
@@ -43,14 +52,18 @@ dialog --title "Welcome! Here be dragons..." --msgbox "This script can install o
 MODE=$(dialog --title "Please choose the mode." --menu "Script Mode" 0 0 0 \
   1 "Install" \
   2 "Uninstall" \
-  3>&1 1>&2 2>&3 3>&-); clear # open file descriptor, stdout to sterr, sterr to new file descriptor, then close file descriptor
+  3>&1 1>&2 2>&3 3>&-); clear # hide the output from `dialog` without hiding errors
 
 if [ "$MODE" == "1" ]; then
     dialog --yesno "There are some copyright concerns with this project. You are running this service at your own risk -- do you agree?" 0 0 && clear || exit 0
-VERSION=$(dialog --title "Please choose the version." --menu "Script Mode" 0 0 0 \
-  1 "Stable" \
-  2 "Beta" \
-  3>&1 1>&2 2>&3 3>&-); clear # open file descriptor, stdout to sterr, sterr to new file descriptor, then close file descriptor
+    if [[ "$1" == "--testing" ]]; then
+        VERSION="3"
+    else
+    VERSION=$(dialog --title "Please choose the version." --menu "Script Mode" 0 0 0 \
+    1 "Stable" \
+    2 "Beta" \
+    3>&1 1>&2 2>&3 3>&-); clear # hide the output from `dialog` without hiding errors
+    fi
 fi
 
 # pathing and variables
@@ -116,9 +129,9 @@ elif [ "$MODE" == "2" ]; then
     ps axf | grep "sleep.*[3-9][6-9][0-9]\{2\}$\|sleep.*[4-9][0-9]\{3\}$\|sleep.*[1-9][0-9]\{4,\}$" | awk '{print "kill -9 " $1}' | sh || true
     for package in "${XTR_PACKAGES[@]}"; do
         apt purge $package -y
+    done
         apt autoremove
         apt autoclean
-    done
     
 else
     echo "Invalid mode."
@@ -200,16 +213,12 @@ fi
 
 # start
 if [ "$MODE" == "1" ]; then
-    # to appease Ubuntu when enabling the icecast2 service
-    sed -i 's/^#\s*\(en_US ISO-8859-1\)/\1/' /etc/locale.gen
-    locale-gen
-
-    systemctl enable icecast2
-    systemctl start icecast2
+    systemctl enable --now icecast2
+    systemctl enable --now nginx
     bash $RESYNC
-    systemctl stop nginx && systemctl disable nginx && systemctl start nginx
-    dialog --title "Pre-Reboot Test" --msgbox "The WebUI runs on port 80 and the reverse proxy for the audio runs on port 8080 and redirects to Icecast on port 8000. will be available 8 hours after starting the streams by default. Check that ports 80, 8080, and 8000 are accessible before continuing. There is an 8-hour delay for the WebUI and reverse proxy because it will take 8 hours for the streams to populate." 0 0
-    dialog --yesno "It will take approximately 30 seconds for the test streams to be available on port 8000 (and by extension, port 8080). The test streams will be disabled after rebooting.\n\nSelect 'Yes' when you've finished testing ports 80 and 8080 in order to reboot. " 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
+    systemctl reload nginx
+    dialog --title "Pre-Reboot Test" --msgbox "Check that ports 80, 8080, and 8000 are accessible before continuing (it may take 30 seconds). The WebUI runs on port 80 and the reverse proxy for the audio runs on port 8080 and redirects to Icecast on port 8000. It will take 8 hours for the streams to populate - in the meantime the WebUI defaults to bbcradiorelay.net" 0 0
+    dialog --yesno "The test streams will be disabled after rebooting.\n\nSelect 'Yes' when you've finished testing ports 80, 8080 and 8000 to reboot." 0 0 && sed -i 's/startCustomstream $2 #user-defined/#&/' $START_RADIO && reboot || exit 0
 elif [ "$MODE" == "2" ]; then
     # Delete the script itself if it still exists
     dialog --yesno "Select 'Yes' to delete this script." 0 0 && rm -- "$0" || exit 0

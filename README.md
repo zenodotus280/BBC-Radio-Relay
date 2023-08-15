@@ -20,7 +20,7 @@ For all six stations across 5 time zones you will need about 1 core (more for cl
 
 If you have a VM or LXC container (or an interactive Docker container) you can simply 'wget' the install script:
 
-`wget -O /root/BBC_RELAY_installer.sh https://raw.githubusercontent.com/zenodotus280/BBC-Radio-Relay/main/installer.sh && bash /root/BBC_RELAY_installer.sh`
+`wget -O /root/BBC_RELAY_installer.sh https://raw.githubusercontent.com/zenodotus280/BBC-Radio-Relay/main/installer.sh && less /root/BBC_RELAY_installer.sh`
 
 This is a minimally interactive install script that will start:
 - Icecast2 on port 8000 to make the audio streams available
@@ -33,7 +33,8 @@ This is a minimally interactive install script that will start:
 
 ## Configuration
 
-At the moment you will need to explore the code yourself to make any adjustments if you want to reduce the resource usage. Reducing the number of time zones will have the most noticeable impact along with the test stream that starts after 30 seconds.
+At the moment you will need to explore the code yourself to make any adjustments if you want to reduce the resource usage. Reducing the number of time zones will have the most noticeable impact along with the test stream that starts after 30 seconds (disabled automatically after post-install testing). If you are using a reverse proxy to access this then you will need to edit `_station.j2` and modify one of the sources to use the correct port for the backend:
+`var firstSource = location.origin + ":8080/{{ station.stn_name }}/{{ station.tz_offset }}";` assumes port 8080 but Cloudflare, for example, will not allow HTTPS traffic on that port so I have used port 8443 instead: `var secondSource = "https://bbcradiorelay.net:8443/{{ station.stn_name }}/{{ station.tz_offset }}";`. Once you modify the template with your port you would need to re-run the `generate.py` script to rebuild the individual stations (or just search-and-replace the existing ones instead of editing the `_station.j2`).
 
 ## Testing Branch Notes
 The "testing" branch contains the latest changes and is what I use when trying new features and troubleshooting issues. Consider it "alpha". The main git repo should be considered "beta" and the  numbered version releases are stable.
