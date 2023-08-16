@@ -1,6 +1,6 @@
 #!/bin/bash
 clear
-set -eu
+set -e
 
 # housekeeping
 
@@ -11,7 +11,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Check if the user passed "--skip-os-check" flag
-if [[ "${1:-}" == "--skip-os-check" ]]; then
+if [[ "$1" == "--skip-os-check" ]]; then
     echo "Skipping OS check."
 else
     # Perform the OS check
@@ -24,7 +24,6 @@ else
         exit 1
     fi
 fi
-
 
 # Check if systemd is available
 if ! command -v systemctl >/dev/null 2>&1; then
