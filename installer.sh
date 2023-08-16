@@ -11,7 +11,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Check if the user passed "--skip-os-check" flag
-if [[ "$1" == "--skip-os-check" ]]; then
+if [[ "${1:-}" == "--skip-os-check" ]]; then
     echo "Skipping OS check."
 else
     # Perform the OS check
@@ -20,10 +20,11 @@ else
     else
         clear
         echo "Operating system is not Debian 12. The script will likely break with other distributions."
-        echo "You can bypass this check by running `install.sh --skip-os-check`."
+        echo "You can bypass this check by running 'install.sh --skip-os-check'."
         exit 1
     fi
 fi
+
 
 # Check if systemd is available
 if ! command -v systemctl >/dev/null 2>&1; then
