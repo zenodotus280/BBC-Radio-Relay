@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="style.css">
-
+<!-- Comment Template -->
 <div class="d-flex justify-content-center align-items-center mt-3">
   <div id="player-warning" style="display:none;" class="alert alert-warning " role="alert">
     <small id="player-src1" class="player-src1"></p>
@@ -14,12 +14,12 @@
     </a>
 </div>
 <div class="d-flex justify-content-center align-items-center mt-3">
-    <audio id="player" volume="0.5" preload="auto" playsinline></audio>
+    <audio id="player" volume="0.5" preload="auto" playsinline></audio> <!-- assume that preload works -->
     <button id="vol_minus" class="button-raised vol_con" style="display: none" role="button">−</button>
     <button class="button-raised button-raised-mute vol_con" style="display: none" role="button">Mute</button>
     <button id="vol_plus" class="button-raised vol_con" style="display: none" role="button">+</button>
     <button id="start-button" class="button-raised" role="button" style="display: none;">Tune in!</button>
-    <button id="loading-button" class="button-raised" role="button" style="background-color: chocolate;" disabled>Loading . . .</button>
+    <button id="loading-button" class="button-raised" role="button" style="background-color: chocolate;" disabled>Loading . . .</button> <!-- hide the play button by default unless audio source is valid -->
 </div>
 
 <script>
@@ -42,11 +42,17 @@ document.addEventListener('DOMContentLoaded', function() {
   
   var sourceIndex = 0;
   
-  function loadNextSource() {
-    player.src = sources[sourceIndex];
-    player.load();
-    player.addEventListener('error', handleSourceError);
-  }
+player.src = localSource;
+player.volume = 0.1; // Set volume to 0.1 for mp3 fallback
+player.loop = true; // Enable loop for mp3 fallback
+player.play();
+
+function loadNextSource() {
+  player.src = sources[sourceIndex];
+  player.load();
+  player.addEventListener('error', handleSourceError);
+  console.log('Next source selected.');
+}
   
 function handleSourceError() {
   player.removeEventListener('error', handleSourceError); // Remove the event listener
@@ -54,10 +60,7 @@ function handleSourceError() {
   if (sourceIndex < sources.length) {
     loadNextSource();
   } else {
-    player.src = localSource;
-    player.volume = 0.1; // Set volume to 0.1 for mp3 fallback
-    player.loop = true; // Enable loop for mp3 fallback
-    player.play();
+
     //loadingBtn.style.display = 'none';
     //startBtn.style.display = 'block';
     document.getElementById('player-src2').textContent = 'No valid audio source was found.';
@@ -71,18 +74,18 @@ loadingBtn.style.display = 'block';
 
 // 'canplaythrough' event handler
 player.addEventListener('canplaythrough', function() {
-  setTimeout(function() {
-    startBtn.style.display = 'block';
-    loadingBtn.style.display = 'none';
-    if (sourceIndex === 1) {
-      document.getElementById('player-src1').textContent = 'Second Audio Source Used: ' + player.src;
-      document.getElementById('player-warning').style.display = 'block';
-    } else if (sourceIndex === 2) {
-      document.getElementById('player-src1').textContent = 'Third Audio Source Used: ' + player.src;
-      document.getElementById('player-warning').style.display = 'block';
-    }
-    player.removeEventListener('error', handleSourceError); // Remove the event listener after 'canplaythrough' event
-  }, 0);
+  startBtn.style.display = 'block';
+  loadingBtn.style.display = 'none';
+  if (sourceIndex === 1) {
+    console.warn('Second Audio Source Used: ' + player.src);
+    document.getElementById('player-src1').textContent = 'Second Audio Source Used: ' + player.src;
+    document.getElementById('player-warning').style.display = 'block';
+  } else if (sourceIndex === 2) {
+    console.warn('Third Audio Source Used: ' + player.src);
+    document.getElementById('player-src1').textContent = 'Third Audio Source Used: ' + player.src;
+    document.getElementById('player-warning').style.display = 'block';
+  }
+  player.removeEventListener('error', handleSourceError);
 });
 
     // 'click' event handler for start button
@@ -92,16 +95,19 @@ player.addEventListener('canplaythrough', function() {
             element.style.display = 'block';
         });
         this.style.display = 'none';
+        console.log('Start button clicked.');
     });
 
     // 'click' event handler for volume minus button
     volMinusBtn.addEventListener('click', function() {
         player.volume = Math.max(0.1, player.volume - 0.1);
+        console.log('Volume Minus button clicked.');
     });
 
     // 'click' event handler for mute button
     muteBtn.addEventListener('click', function() {
         player.muted = !player.muted;
+        console.log('Mute button clicked.');
         if (player.muted) {
             this.classList.add('muted');
         } else {
@@ -112,18 +118,12 @@ player.addEventListener('canplaythrough', function() {
     // 'click' event handler for volume plus button
     volPlusBtn.addEventListener('click', function() {
         player.volume = Math.min(1, player.volume + 0.1);
+        console.log('Volume Plus button clicked.');
     });
 
     // 'click' event handler for logo link
     logoLink.addEventListener('click', function(event) {
-        event.preventDefault();
-        navigator.clipboard.writeText(player.src)
-            .then(function() {
-                alert('Audio source URL copied to clipboard!');
-            })
-            .catch(function(error) {
-                console.error('Failed to copy audio source URL to clipboard:', error);
-            });
+        player.play();
     });
 });
 </script>

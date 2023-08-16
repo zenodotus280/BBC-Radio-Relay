@@ -1,11 +1,28 @@
 #!/bin/bash
 clear
 set -eu
+
 # housekeeping
+
 # Check if script is running as root
 if [ "$(id -u)" -ne 0 ]; then
     echo "This script must be run as root."
     exit 1
+fi
+
+# Check if the user passed "--skip-os-check" flag
+if [[ "$1" == "--skip-os-check" ]]; then
+    echo "Skipping OS check."
+else
+    # Perform the OS check
+    if grep -q 'ID=debian' /etc/os-release && grep -q 'VERSION_ID="12"' /etc/os-release; then
+        echo "Operating system is Debian 12."
+    else
+        clear
+        echo "Operating system is not Debian 12. The script will likely break with other distributions."
+        echo "You can bypass this check by running `install.sh --skip-os-check`."
+        exit 1
+    fi
 fi
 
 # Check if systemd is available
@@ -28,14 +45,6 @@ if [ "$available_disk_space" -lt "$required_disk_space" ]; then
     exit 0
 fi
 
-# to appease Ubuntu when enabling the icecast2 service
-{
-    echo 'export LANG="en_US.utf8"'
-    echo 'export LANGUAGE="en_US.utf8"'
-    echo 'export LC_ALL="en_US.utf8"'
-} >> ~/.bashrc
-source ~/.bashrc
-
 apt update
 apt install wget dialog -y
 
@@ -56,14 +65,10 @@ MODE=$(dialog --title "Please choose the mode." --menu "Script Mode" 0 0 0 \
 
 if [ "$MODE" == "1" ]; then
     dialog --yesno "There are some copyright concerns with this project. You are running this service at your own risk -- do you agree?" 0 0 && clear || exit 0
-    if [[ "$1" == "--testing" ]]; then
-        VERSION="3"
-    else
     VERSION=$(dialog --title "Please choose the version." --menu "Script Mode" 0 0 0 \
     1 "Stable" \
     2 "Beta" \
     3>&1 1>&2 2>&3 3>&-); clear # hide the output from `dialog` without hiding errors
-    fi
 fi
 
 # pathing and variables
@@ -75,7 +80,7 @@ RESYNC=$BASE_FOLDER/cron-scripts/resync
 DOWNLOADER=$BASE_FOLDER/run-scripts/downloader.sh
 RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
-STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip"
+STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip python3-jinja2"
 XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
 STABLE_VERSION=1.2.0
 
@@ -90,7 +95,6 @@ if [ "$MODE" == "1" ]; then
     for package in "${XTR_PACKAGES[@]}"; do
         apt install $package -y
     done
-    pip install jinja2
     # files and folders
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
     mkdir -pv $BASE_FOLDER/www/stations
@@ -175,8 +179,7 @@ if [ "$MODE" == "1" ] || [ "$MODE" == "2" ]; then
         #purge_ogg:   clean up day-old audio files
         #             reboot at 6am weekly to remain in sync
         #resync:      bootstrap the relay on boot
-        #             wait before providing webUI so healthchecks succeed with HA reverse proxy
-    CRON=("0 */12 * * * sh $KILL_FFMPEG" "0 */1 * * * sh $PURGE_OGG" "0 6 * * 1 apt upgrade -y; systemctl reboot" "@reboot sh $RESYNC" "@reboot sleep 8h && systemctl start nginx")
+    CRON=("0 */12 * * * sh $KILL_FFMPEG" "0 */1 * * * sh $PURGE_OGG" "0 6 * * 1 apt upgrade -y; systemctl reboot" "@reboot sh $RESYNC")
 
     # Escape the asterisks
     CRON=("${CRON[@]/\*/\*}")
@@ -213,8 +216,8 @@ fi
 
 # start
 if [ "$MODE" == "1" ]; then
-    systemctl enable --now icecast2
-    systemctl enable --now nginx
+    systemctl enable icecast2 nginx
+    systemctl start icecast2 nginx # 'systemctl enable --now' was not working
     bash $RESYNC
     systemctl reload nginx
     dialog --title "Pre-Reboot Test" --msgbox "Check that ports 80, 8080, and 8000 are accessible before continuing (it may take 30 seconds). The WebUI runs on port 80 and the reverse proxy for the audio runs on port 8080 and redirects to Icecast on port 8000. It will take 8 hours for the streams to populate - in the meantime the WebUI defaults to bbcradiorelay.net" 0 0
