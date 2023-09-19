@@ -1,2 +1,3 @@
 .ignored/*
-stations/*
+radio-player/*.html
+radio-player/stations/*.html

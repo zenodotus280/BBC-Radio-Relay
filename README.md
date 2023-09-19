@@ -14,13 +14,15 @@ If you have suggestions or have issues, please use the issues or discussion area
 
 ## Hardware Requirements
 
-For all six stations across 5 time zones you will need about 1 core (more for cloud VMs), 512 MB of RAM, and 15-25 GB of disk space. Tested successfully in Debian-based VMs, LXCs (privileged), and bare metal on X86_64 and armv7 and armv8 architectures.
+For all six stations across 5 time zones you will need about 1 core (more for cloud VMs), 512 MB of RAM, and 15-25 GB of disk space. Debian 12 is supported but it will run on most apt-based distros with some tweaks to the install script. I recommend running it in a VM or an LXC - creating a Docker build file is something I would like to do eventually.
 
 ## Install
 
 If you have a VM or LXC container (or an interactive Docker container) you can simply 'wget' the install script:
 
 `wget -O /root/BBC_RELAY_installer.sh https://raw.githubusercontent.com/zenodotus280/BBC-Radio-Relay/main/installer.sh && less /root/BBC_RELAY_installer.sh`
+
+Do not pipe-to-bash blindly because this script will mess with your system. Run it in a VM/LXC once downloaded: `bash /root/BBC_RELAY_installer.sh`
 
 This is a minimally interactive install script that will start:
 - Icecast2 on port 8000 to make the audio streams available
@@ -36,5 +38,10 @@ This is a minimally interactive install script that will start:
 At the moment you will need to explore the code yourself to make any adjustments if you want to reduce the resource usage. Reducing the number of time zones will have the most noticeable impact along with the test stream that starts after 30 seconds (disabled automatically after post-install testing). If you are using a reverse proxy to access this then you will need to edit `_station.j2` and modify one of the sources to use the correct port for the backend:
 `var firstSource = location.origin + ":8080/{{ station.stn_name }}/{{ station.tz_offset }}";` assumes port 8080 but Cloudflare, for example, will not allow HTTPS traffic on that port so I have used port 8443 instead: `var secondSource = "https://bbcradiorelay.net:8443/{{ station.stn_name }}/{{ station.tz_offset }}";`. Once you modify the template with your port you would need to re-run the `generate.py` script to rebuild the individual stations (or just search-and-replace the existing ones instead of editing the `_station.j2`).
 
-## Testing Branch Notes
-The "testing" branch contains the latest changes and is what I use when trying new features and troubleshooting issues. Consider it "alpha". The main git repo should be considered "beta" and the  numbered version releases are stable.
+## First Run
+
+After going to the IP address of the host you should see the Web Radio Player. It is HTML5 with some Javascript and CSS for control and styling. Initially you will see a warning message for a station that says it is using the second (or third) source. This is bbcradiorelay.net by default. It will take 8 hours to fully populate all the audio so while you wait for your own server to build up the backlog it will allow you to use the alternative backends that I host. Once the streams are up it will select the local audio first. This ensures a better first impression of how everything works and also gives the option for a naive high-availabilty setup.
+
+## Reverse Proxy and High Availability
+
+Currently being tested with Nginx as a local HTTP reverse proxy (to bridge the web player and backend radio player) and HAProxy as a global reverse proxy with HTTPS termination.
