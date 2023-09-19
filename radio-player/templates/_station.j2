@@ -33,56 +33,59 @@ document.addEventListener('DOMContentLoaded', function() {
   var loadingBtn = document.getElementById('loading-button');
   var logoLink = document.getElementById('logo-link');
 
-  var firstSource = location.origin + ":8080/{{ station.stn_name }}/{{ station.tz_offset }}";
-  var secondSource = "https://bbcradiorelay.net:8443/{{ station.stn_name }}/{{ station.tz_offset }}";
-  var thirdSource = "http://bbcradiorelay.net:8080/{{ station.stn_name }}/{{ station.tz_offset }}";
-  var localSource = '../media/radio-static-2.mp3';
-  
-  var sources = [firstSource, secondSource, thirdSource]; // Array of sources to try
-  
+  var localSource = location.origin + ":8080/{{ station.stn_name }}/{{ station.tz_offset }}";
+  var standbySource = "https://bbcradiorelay.net:8443/{{ station.stn_name }}/{{ station.tz_offset }}";
+  var fallbackSource = "http://bbcradiorelay.duckdns.org:8000/{{ station.stn_name }}/{{ station.tz_offset }}";
+  var failedSource = '../media/radio_noise.ogg';
+  var sources = [localSource, standbySource, fallbackSource]; // Array of sources to try
   var sourceIndex = 0;
   
-player.src = localSource;
-player.volume = 0.1; // Set volume to 0.1 for mp3 fallback
-player.loop = true; // Enable loop for mp3 fallback
-player.play();
-
 function loadNextSource() {
+  // Hide the elements with the class 'vol_con'
+  document.querySelectorAll('.vol_con').forEach(function(element) {
+    element.style.display = 'none';
+  });
+  
   player.src = sources[sourceIndex];
   player.load();
   player.addEventListener('error', handleSourceError);
-  console.log('Next source selected.');
 }
   
 function handleSourceError() {
+  console.log('handleSourceError event fired')
   player.removeEventListener('error', handleSourceError); // Remove the event listener
   sourceIndex++;
+  console.log('Next source selected.' + sourceIndex)
   if (sourceIndex < sources.length) {
     loadNextSource();
   } else {
-
-    //loadingBtn.style.display = 'none';
-    //startBtn.style.display = 'block';
     document.getElementById('player-src2').textContent = 'No valid audio source was found.';
     document.getElementById('player-error').style.display = 'block';
+    player.src = failedSource;
+    player.volume = 0.25; // Set volume to 0.25 for fallback
+    player.loop = true; // Enable loop for fallback
+    startBtn.style.display = 'block';
   }
 };
 
-loadNextSource();
-
 loadingBtn.style.display = 'block';
+
+loadNextSource();
 
 // 'canplaythrough' event handler
 player.addEventListener('canplaythrough', function() {
-  startBtn.style.display = 'block';
+  console.log('canplaythrough even fired')
+  if (sourceIndex !== sources.length) {
+    startBtn.style.display = 'block'; // If no more sources then hide the "tune in" button
+  }
   loadingBtn.style.display = 'none';
   if (sourceIndex === 1) {
-    console.warn('Second Audio Source Used: ' + player.src);
-    document.getElementById('player-src1').textContent = 'Second Audio Source Used: ' + player.src;
+    console.warn('Standby Audio Source Used: ' + player.src);
+    document.getElementById('player-src1').textContent = 'The standby audio source is active until local audio is buffered.';
     document.getElementById('player-warning').style.display = 'block';
   } else if (sourceIndex === 2) {
-    console.warn('Third Audio Source Used: ' + player.src);
-    document.getElementById('player-src1').textContent = 'Third Audio Source Used: ' + player.src;
+    console.warn('Fallback Audio Source Used: ' + player.src);
+    document.getElementById('player-src1').textContent = 'The fallback audio source is active until local audio is buffered.';
     document.getElementById('player-warning').style.display = 'block';
   }
   player.removeEventListener('error', handleSourceError);
@@ -102,6 +105,7 @@ player.addEventListener('canplaythrough', function() {
     volMinusBtn.addEventListener('click', function() {
         player.volume = Math.max(0.1, player.volume - 0.1);
         console.log('Volume Minus button clicked.');
+        console.log(player.volume);
     });
 
     // 'click' event handler for mute button
@@ -119,11 +123,13 @@ player.addEventListener('canplaythrough', function() {
     volPlusBtn.addEventListener('click', function() {
         player.volume = Math.min(1, player.volume + 0.1);
         console.log('Volume Plus button clicked.');
+        console.log(player.volume);
     });
 
     // 'click' event handler for logo link
     logoLink.addEventListener('click', function(event) {
-        player.play();
+        var sourceIndex = 0;
+        loadNextSource();
     });
 });
 </script>
