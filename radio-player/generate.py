@@ -13,10 +13,9 @@ with open(f"./{fileName}", "w") as f:
 # ---
 
 for station in stations:
-    rendered = env.get_template("station_base.html.j2").render(stations=stations, station=station, primarydomain = "https://bbcradiorelay.net", fallbackdomain = "")
+    rendered = env.get_template("station_base.html.j2").render(stations=stations, station=station)
     html_path = f"./stations/{station['stn_name']}-{station['tz_offset']}.html"
     html_file = open(html_path, 'w')
     html_file.write(rendered)
     html_file.close()
-
-
+    
