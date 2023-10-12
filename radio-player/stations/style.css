@@ -37,9 +37,4 @@
     .button-raised-mute.muted {
         background-color: darkred;
     }
-
-    /* CSS for hiding the alert initially */
-#player-alert {
-    display: none;
-  }
   
