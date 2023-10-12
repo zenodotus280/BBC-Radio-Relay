@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2068
 clear
 set -e
 
@@ -82,17 +83,17 @@ RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip python3-jinja2"
 XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
-STABLE_VERSION=1.3.1
+STABLE_VERSION=1.3.1b
 
 # install/uninstall packages, files, and folders
 
 if [ "$MODE" == "1" ]; then
     # install all packages
     apt upgrade -yq
-    for package in "${STD_PACKAGES[@]}"; do
+    for package in ${STD_PACKAGES[@]}; do # don't double-quote or the packages will be passed as a single string
         apt install "$package" -y
     done
-    for package in "${XTR_PACKAGES[@]}"; do
+    for package in ${XTR_PACKAGES[@]}; do # don't double-quote or the packages will be passed as a single string
         apt install "$package" -y
     done
     # files and folders
@@ -136,7 +137,7 @@ elif [ "$MODE" == "2" ]; then
         sleep.*[3-9][6-9][0-9]\{2\}$\|sleep.*[4-9][0-9]\{3\}$\|sleep.*[1-9][0-9]\{4,\}$ # capture unstarted radio stations
     )'
 
-    for package in "${XTR_PACKAGES[@]}"; do
+    for package in ${XTR_PACKAGES[@]}; do # don't double-quote or the packages will be passed as a single string
         apt purge "$package" -y
     done
         apt autoremove
