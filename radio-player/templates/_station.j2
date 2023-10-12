@@ -2,10 +2,10 @@
 <!-- Comment Template -->
 <div class="d-flex justify-content-center align-items-center mt-3">
   <div id="player-warning" style="display:none;" class="alert alert-warning " role="alert">
-    <small id="player-src1" class="player-src1"></p>
+    <small id="source-alert-warning" class="source-alert-warning"></p>
   </div>
-  <div id="player-error" style="display:none;" class="alert alert-danger " role="alert">
-    <small id="player-src2" class="player-src2"></p>
+  <div id="player-danger" style="display:none;" class="alert alert-danger " role="alert">
+    <small id="source-alert-danger" class="source-alert-danger"></p>
   </div>
 </div>
 <div class="d-flex justify-content-center align-items-center mt-3">
@@ -14,122 +14,152 @@
     </a>
 </div>
 <div class="d-flex justify-content-center align-items-center mt-3">
-    <audio id="player" volume="0.5" preload="auto" playsinline></audio> <!-- assume that preload works -->
+    <audio id="player" volume="0.5" preload="auto" playsinline></audio>
     <button id="vol_minus" class="button-raised vol_con" style="display: none" role="button">−</button>
     <button class="button-raised button-raised-mute vol_con" style="display: none" role="button">Mute</button>
     <button id="vol_plus" class="button-raised vol_con" style="display: none" role="button">+</button>
-    <button id="start-button" class="button-raised" role="button" style="display: none;">Tune in!</button>
-    <button id="loading-button" class="button-raised" role="button" style="background-color: chocolate;" disabled>Loading . . .</button> <!-- hide the play button by default unless audio source is valid -->
+    <button id="start-button" class="button-raised" role="button" style="display: block">Tune in!</button>
+    <button id="loading-button" class="button-raised" role="button" style="background-color: chocolate; display: none" disabled>Loading . . .</button> <!-- hide the play button by default unless audio source is valid -->
 </div>
 
 <script>
 // DOMContentLoaded event handler
 document.addEventListener('DOMContentLoaded', function() {
-  var player = document.getElementById('player');
-  var volMinusBtn = document.getElementById('vol_minus');
-  var muteBtn = document.querySelector('.button-raised-mute');
-  var volPlusBtn = document.getElementById('vol_plus');
-  var startBtn = document.getElementById('start-button');
-  var loadingBtn = document.getElementById('loading-button');
-  var logoLink = document.getElementById('logo-link');
+    const player = document.getElementById('player');
+    const volMinusBtn = document.getElementById('vol_minus');
+    const muteBtn = document.querySelector('.button-raised-mute');
+    const volPlusBtn = document.getElementById('vol_plus');
+    const startBtn = document.getElementById('start-button');
+    const loadingBtn = document.getElementById('loading-button');
+    const logoLink = document.getElementById('logo-link');
 
-  var localSource = location.origin + ":8080/{{ station.stn_name }}/{{ station.tz_offset }}";
-  var standbySource = "https://bbcradiorelay.net:8443/{{ station.stn_name }}/{{ station.tz_offset }}";
-  var fallbackSource = "http://bbcradiorelay.duckdns.org:8000/{{ station.stn_name }}/{{ station.tz_offset }}";
-  var failedSource = '../media/radio_noise.ogg';
-  var sources = [localSource, standbySource, fallbackSource]; // Array of sources to try
-  var sourceIndex = 0;
-  
-function loadNextSource() {
-  // Hide the elements with the class 'vol_con'
-  document.querySelectorAll('.vol_con').forEach(function(element) {
-    element.style.display = 'none';
-  });
-  
-  player.src = sources[sourceIndex];
-  player.load();
-  player.addEventListener('error', handleSourceError);
+    const LOCAL_SOURCE = location.origin + ":8080/{{ station.stn_name }}/{{ station.tz_offset }}";
+    const STANDBY_SOURCE = "https://bbcradiorelay.net:8443/{{ station.stn_name }}/{{ station.tz_offset }}";
+    const HTTP_FALLBACK_SOURCE = "http://bbcradiorelay.duckdns.org:8000/{{ station.stn_name }}/{{ station.tz_offset }}";
+    const FAILED_SOURCE = '../media/radio_noise.ogg';
+
+    const LOCAL_AUDIO_NOT_BUFFERED = 'The local audio has not buffered yet.';
+    const STANDBY_AUDIO_UNAVAILABLE = 'The HTTPS standby audio is not available. Using HTTP.';
+    const BOTH_AUDIO_SOURCES_FAILED = 'Both audio sources failed. Try again later.';
+
+    const FALLBACK_VOLUME = 0.25;
+
+// ----------------------------------------------------------------------------
+
+function setLoadingState() {
+    console.log('setLoadingState event fired');
+    loadingBtn.style.display = 'block'; // Show the "Loading" button
+    startBtn.style.display = 'none'; // Hide the "Tune In" button
+    document.getElementById('player-warning').style.display = 'none';
+    document.getElementById('player-danger').style.display = 'none';
+    // Hide the volume control buttons
+    document.querySelectorAll('.vol_con').forEach(function(element) {
+        element.style.display = 'none';
+    });
 }
-  
-function handleSourceError() {
-  console.log('handleSourceError event fired')
-  player.removeEventListener('error', handleSourceError); // Remove the event listener
-  sourceIndex++;
-  console.log('Next source selected.' + sourceIndex)
-  if (sourceIndex < sources.length) {
-    loadNextSource();
-  } else {
-    document.getElementById('player-src2').textContent = 'No valid audio source was found.';
-    document.getElementById('player-error').style.display = 'block';
-    player.src = failedSource;
-    player.volume = 0.25; // Set volume to 0.25 for fallback
+
+function loadSource(source) {
+    console.log('loadSource event fired');
+    console.log(source);
+
+    player.src = source;
+    player.load();
+    player.addEventListener('error', function() {
+        handleSourceError(source); // based on the source that failed
+    });
+}
+
+function handleCanPlayThrough() {
+    console.log('handleCanPlayThrough event fired');
+    player.play();
+    loadingBtn.style.display = 'none'; // Hide the "Loading" button
+    startBtn.style.display = 'none'; // Hide the "Tune In" button
+    // Show the volume control buttons
+    document.querySelectorAll('.vol_con').forEach(function(element) {
+        element.style.display = 'block';
+    });
+}
+
+function handleSourceError(unfoundSource) {
+    console.log('handleSourceError event fired');
+    console.log(unfoundSource);
+
+    if (unfoundSource === LOCAL_SOURCE) {
+        document.getElementById('player-danger').style.display = 'none'; // Hide the danger alert
+        document.getElementById('player-warning').textContent = LOCAL_AUDIO_NOT_BUFFERED;
+        document.getElementById('player-warning').style.display = 'block'; // Show the warning alert
+        loadSource(STANDBY_SOURCE); // Try loading the standby source
+
+    } else if (unfoundSource === STANDBY_SOURCE) {
+        document.getElementById('player-danger').style.display = 'none'; // Hide the danger alert
+        document.getElementById('player-warning').textContent = STANDBY_AUDIO_UNAVAILABLE;
+        document.getElementById('player-warning').style.display = 'block'; // Show the warning alert
+        loadSource(HTTP_FALLBACK_SOURCE); // Try loading the HTTP fallback source
+
+    } else if (unfoundSource === HTTP_FALLBACK_SOURCE) {
+        document.getElementById('player-warning').style.display = 'none'; // Hide the warning alert
+        document.getElementById('player-danger').textContent = BOTH_AUDIO_SOURCES_FAILED;
+        document.getElementById('player-danger').style.display = 'block'; // Show the danger alert
+        failedSourcePlay(); // Play radio static if all else fails
+    } else {
+        console.error('Unknown error source:', unfoundSource); // Log an error
+    }
+}
+
+
+// ----------------------------------------------------------------------------
+// The "logo link" button allows me to debug the start button.
+
+function handleStartOrLogoClick(source) {
+    console.log('Button clicked.');
+    setLoadingState(); // configure buttons for reload
+    loadSource(source); // Load the audio source when the button is clicked
+    player.oncanplaythrough = handleCanPlayThrough;
+}
+
+startBtn.addEventListener('click', () => {
+    handleStartOrLogoClick(LOCAL_SOURCE);
+});
+
+logoLink.addEventListener('click', () => {
+    handleStartOrLogoClick(LOCAL_SOURCE);
+});
+// ----------------------------------------------------------------------------
+
+
+// audio to play when no valid sources found
+function failedSourcePlay() {
+    console.log('Failed source activated.')
+    player.src = FAILED_SOURCE;
+    player.volume = FALLBACK_VOLUME; // Set volume for fallback radio static
     player.loop = true; // Enable loop for fallback
-    startBtn.style.display = 'block';
-  }
-};
+    player.play();
+}
 
-loadingBtn.style.display = 'block';
+// 'click' event handler for mute button
+muteBtn.addEventListener('click', function() {
+    player.muted = !player.muted;
+    console.log('Mute button clicked.');
+    if (player.muted) {
+        this.classList.add('muted');
+    } else {
+        this.classList.remove('muted');
+    }
+})
 
-loadNextSource();
+// 'click' event handler for volume minus button
+volMinusBtn.addEventListener('click', function() {
+    player.volume = Math.max(0.1, player.volume - 0.1);
+    console.log('Volume Minus button clicked.');
+    console.log(player.volume);
+})
 
-// 'canplaythrough' event handler
-player.addEventListener('canplaythrough', function() {
-  console.log('canplaythrough even fired')
-  if (sourceIndex !== sources.length) {
-    startBtn.style.display = 'block'; // If no more sources then hide the "tune in" button
-  }
-  loadingBtn.style.display = 'none';
-  if (sourceIndex === 1) {
-    console.warn('Standby Audio Source Used: ' + player.src);
-    document.getElementById('player-src1').textContent = 'The standby audio source is active until local audio is buffered.';
-    document.getElementById('player-warning').style.display = 'block';
-  } else if (sourceIndex === 2) {
-    console.warn('Fallback Audio Source Used: ' + player.src);
-    document.getElementById('player-src1').textContent = 'The fallback audio source is active until local audio is buffered.';
-    document.getElementById('player-warning').style.display = 'block';
-  }
-  player.removeEventListener('error', handleSourceError);
-});
+// 'click' event handler for volume plus button
+volPlusBtn.addEventListener('click', function() {
+    player.volume = Math.min(1, player.volume + 0.1);
+    console.log('Volume Plus button clicked.');
+    console.log(player.volume);
+})
 
-    // 'click' event handler for start button
-    startBtn.addEventListener('click', function() {
-        player.play();
-        document.querySelectorAll('.vol_con').forEach(function(element) {
-            element.style.display = 'block';
-        });
-        this.style.display = 'none';
-        console.log('Start button clicked.');
-    });
-
-    // 'click' event handler for volume minus button
-    volMinusBtn.addEventListener('click', function() {
-        player.volume = Math.max(0.1, player.volume - 0.1);
-        console.log('Volume Minus button clicked.');
-        console.log(player.volume);
-    });
-
-    // 'click' event handler for mute button
-    muteBtn.addEventListener('click', function() {
-        player.muted = !player.muted;
-        console.log('Mute button clicked.');
-        if (player.muted) {
-            this.classList.add('muted');
-        } else {
-            this.classList.remove('muted');
-        }
-    });
-
-    // 'click' event handler for volume plus button
-    volPlusBtn.addEventListener('click', function() {
-        player.volume = Math.min(1, player.volume + 0.1);
-        console.log('Volume Plus button clicked.');
-        console.log(player.volume);
-    });
-
-    // 'click' event handler for logo link
-    logoLink.addEventListener('click', function(event) {
-        var sourceIndex = 0;
-        loadNextSource();
-    });
-});
+})
 </script>

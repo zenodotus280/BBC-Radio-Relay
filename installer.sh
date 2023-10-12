@@ -82,7 +82,7 @@ RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip python3-jinja2"
 XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
-STABLE_VERSION=1.2.0
+STABLE_VERSION=1.3.1
 
 # install/uninstall packages, files, and folders
 
@@ -90,10 +90,10 @@ if [ "$MODE" == "1" ]; then
     # install all packages
     apt upgrade -yq
     for package in "${STD_PACKAGES[@]}"; do
-        apt install $package -y
+        apt install "$package" -y
     done
     for package in "${XTR_PACKAGES[@]}"; do
-        apt install $package -y
+        apt install "$package" -y
     done
     # files and folders
     rm -rf /opt/BBC-Radio-Relay* & rm -rf /opt/bbc-radio-relay*
@@ -108,11 +108,11 @@ if [ "$MODE" == "1" ]; then
         cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/config $BASE_FOLDER
 
     elif [ "$VERSION" == "2" ]; then
-        wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/main.zip" -O /opt/bbc-radio-relay.zip
+        wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/master.zip" -O /opt/bbc-radio-relay.zip
         unzip -d /opt /opt/bbc-radio-relay.zip
-        cp -r /opt/BBC-Radio-Relay-main/radio-relay/* $BASE_FOLDER
-        cp -r /opt/BBC-Radio-Relay-main/radio-player/* $BASE_FOLDER/www
-        cp -r /opt/BBC-Radio-Relay-main/config $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-master/radio-relay/* $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-master/radio-player/* $BASE_FOLDER/www
+        cp -r /opt/BBC-Radio-Relay-master/config $BASE_FOLDER
     fi
 
     mv $BASE_FOLDER/config/nginx-default.conf /etc/nginx/sites-available/default
@@ -124,15 +124,20 @@ elif [ "$MODE" == "2" ]; then
     # stop services if running and remove uncommon packages
     systemctl stop icecast2
     systemctl stop nginx
-    ps axf | grep downloader | awk '{print "kill -9 " $1}' | sh || true
-    ps axf | grep restart-service | awk '{print "kill -9 " $1}' | sh || true
-    ps axf | grep ffmpeg | awk '{print "kill -9 " $1}' | sh || true
-    ps axf | grep ices2 | awk '{print "kill -9 " $1}' | sh || true
-    ps axf | grep icecast2 | awk '{print "kill -9 " $1}' | sh || true
-    ps axf | grep bbc-rr | awk '{print "kill -9 " $1}' | sh || true
-    ps axf | grep "sleep.*[3-9][6-9][0-9]\{2\}$\|sleep.*[4-9][0-9]\{3\}$\|sleep.*[1-9][0-9]\{4,\}$" | awk '{print "kill -9 " $1}' | sh || true
+    # Kill processes with names containing 'downloader', 'restart-service', 'ffmpeg', 'ices2', 'icecast2', 'bbc-rr'
+    # or processes with 'sleep' followed by specific patterns of digits at the end of the command line.
+    pkill -f '
+        (downloader|
+        restart-service|
+        ffmpeg|
+        ices2|
+        icecast2|
+        bbc-rr|
+        sleep.*[3-9][6-9][0-9]\{2\}$\|sleep.*[4-9][0-9]\{3\}$\|sleep.*[1-9][0-9]\{4,\}$ # capture unstarted radio stations
+    )'
+
     for package in "${XTR_PACKAGES[@]}"; do
-        apt purge $package -y
+        apt purge "$package" -y
     done
         apt autoremove
         apt autoclean
