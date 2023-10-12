@@ -31,7 +31,7 @@ For all six stations across 5 time zones you will need about 1 core (more for cl
 
 If you have a VM or LXC container (or an interactive Docker container) you can simply 'wget' the install script:
 
-`wget -O /root/BBC_RELAY_installer.sh https://raw.githubusercontent.com/zenodotus280/BBC-Radio-Relay/main/installer.sh && less /root/BBC_RELAY_installer.sh`
+`wget -O /root/BBC_RELAY_installer.sh https://raw.githubusercontent.com/zenodotus280/BBC-Radio-Relay/master/installer.sh && less /root/BBC_RELAY_installer.sh`
 
 Do not pipe-to-bash blindly because this script will mess with your system. Run it in a VM/LXC once downloaded: `bash /root/BBC_RELAY_installer.sh`
 
