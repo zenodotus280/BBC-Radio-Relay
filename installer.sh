@@ -82,7 +82,7 @@ RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip python3-jinja2"
 XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
-STABLE_VERSION=1.2.0
+STABLE_VERSION=1.3.1
 
 # install/uninstall packages, files, and folders
 
