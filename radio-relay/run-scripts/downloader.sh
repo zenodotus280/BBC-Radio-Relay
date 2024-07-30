@@ -14,9 +14,7 @@ if [ "$#" -ne 1 ]; then
     exit
 fi
 
-#BBC_STREAM=http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/llnw/bbc_$1.m3u8 # Limelight Networks CDN
-BBC_STREAM=http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_$1.m3u8 # Akamai CDN
-# Both these links may no longer work by mid-2023.
+BBC_STREAM=http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_\$1/bbc_\$1.isml/bbc_\$1-audio%3d96000.norewind.m3u8 # Akamai CDN
 
 log="$BASE_FOLDER/logs/$1-downloader-log.txt"
 playlist="$BASE_FOLDER/logs/$1-autogen-playlist.txt"
