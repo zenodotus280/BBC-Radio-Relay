@@ -83,7 +83,7 @@ RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip python3-jinja2"
 XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
-STABLE_VERSION=1.3.1b
+STABLE_VERSION=1.3.2
 
 # install/uninstall packages, files, and folders
 
@@ -219,12 +219,6 @@ if [ "$MODE" == "1" ] || [ "$MODE" == "2" ]; then
     # Remove the backup file
     rm crontab.bak
 fi
-
-### START of HOTFIX for 1.3.1c ###
-old_url="http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_\$1.m3u8 # Akamai CDN"
-new_url="http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_\$1/bbc_\$1.isml/bbc_\$1-audio%3d96000.norewind.m3u8"
-sed -i "s|$old_url|$new_url|g" $DOWNLOADER || true
-### END of HOTFIX for 1.3.1c ###
 
 # start
 if [ "$MODE" == "1" ]; then
