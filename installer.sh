@@ -67,8 +67,8 @@ MODE=$(dialog --title "Please choose the mode." --menu "Script Mode" 0 0 0 \
 if [ "$MODE" == "1" ]; then
     dialog --yesno "There are some copyright concerns with this project. You are running this service at your own risk -- do you agree?" 0 0 && clear || exit 0
     VERSION=$(dialog --title "Please choose the version." --menu "Script Mode" 0 0 0 \
-    1 "Stable" \
-    2 "Beta" \
+    1 "STABLE" \
+    2 "TESTING" \
     3>&1 1>&2 2>&3 3>&-); clear # hide the output from `dialog` without hiding errors
 fi
 
