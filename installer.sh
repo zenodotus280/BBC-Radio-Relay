@@ -21,7 +21,7 @@ else
     else
         clear
         echo "Operating system is not Debian 12. The script will likely break with other distributions."
-        echo "You can bypass this check by running 'install.sh --skip-os-check'."
+        echo "You can bypass this check by running 'BBC_RELAY_installer.sh --skip-os-check'."
         exit 1
     fi
 fi
@@ -83,7 +83,7 @@ RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip python3-jinja2"
 XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
-STABLE_VERSION=1.3.2a
+STABLE_VERSION=1.3.3
 
 # install/uninstall packages, files, and folders
 
