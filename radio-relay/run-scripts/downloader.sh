@@ -14,23 +14,29 @@ if [ "$#" -ne 1 ]; then
     exit
 fi
 
-# shellcheck disable=SC1091
-source "$BASE_FOLDER/run-scripts/stations.conf" 2>/dev/null || {
-    echo "Missing stations.conf!"
-    exit 1
-}
+# Get the directory where the script resides
+SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
 
-STATION="$1"
-if [ -z "$STATION" ]; then
-    echo "Usage: $0 <station>"
+# Source the configuration file
+CONFIG_FILE="$SCRIPT_DIR/stations.conf"
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Missing stations.conf! Checked: $CONFIG_FILE"
     exit 1
 fi
 
-BBC_STREAM="${!STATION}"  # This expands the variable named by $STATION
-if [ -z "$BBC_STREAM" ]; then
+source "$CONFIG_FILE"
+
+STATION="$1"
+
+# Check if the station exists in the associative array
+if [[ -z "${BBC_URLS[$STATION]}" ]]; then
     echo "Station not found in config: $STATION"
     exit 1
 fi
+
+# Resolve the URL
+BBC_STREAM="${BBC_URLS[$STATION]}"
+echo "Using stream URL for $STATION: $BBC_STREAM"
 
 log="$BASE_FOLDER/logs/$1-downloader-log.txt"
 playlist="$BASE_FOLDER/logs/$1-autogen-playlist.txt"
