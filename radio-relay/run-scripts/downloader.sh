@@ -3,7 +3,7 @@
 # Example usage: "./downloader.sh radio_two &"
 
 # This script initiates initiates the download of the audio stream from the BBC servers.
-# It does basic error handling, if the stream returns a 404 error or ffmpeg fails,
+# It does basic error handling, if the stream returns a 4XX error or ffmpeg fails,
 # the script waits a few seconds and tries again.
 
 BASE_FOLDER=
@@ -14,7 +14,24 @@ if [ "$#" -ne 1 ]; then
     exit
 fi
 
-BBC_STREAM="https://lstn.lv/bbcradio.m3u8?station=bbc_$1&bitrate=320000"
+# shellcheck disable=SC1091
+source "$BASE_FOLDER/run-scripts/stations.conf" 2>/dev/null || {
+    echo "Missing stations.conf!"
+    exit 1
+}
+
+STATION="$1"
+if [ -z "$STATION" ]; then
+    echo "Usage: $0 <station>"
+    exit 1
+fi
+
+BBC_STREAM="${!STATION}"  # This expands the variable named by $STATION
+if [ -z "$BBC_STREAM" ]; then
+    echo "Station not found in config: $STATION"
+    exit 1
+fi
+
 log="$BASE_FOLDER/logs/$1-downloader-log.txt"
 playlist="$BASE_FOLDER/logs/$1-autogen-playlist.txt"
 
@@ -48,7 +65,7 @@ while true; do
     echo "`date` Closing $filename" >> $log
 
     # Check if the download actually happened
-    # ie, ffmpeg might have immediately failed with a 404 error (sometimes happens)
+    # ie, ffmpeg might have immediately failed with a 4XX error (sometimes happens)
     # If it did not succeed, remove the file from the playlist
     # We check if the download was successful based off of if the file was created.
     if [ -e $filename ]; then
