@@ -83,7 +83,8 @@ RESTART_SERVICE=$BASE_FOLDER/run-scripts/restart-service.sh
 START_RADIO=$BASE_FOLDER/run-scripts/start_radio.sh
 STD_PACKAGES="unattended-upgrades wget unzip dialog python3 pip python3-jinja2"
 XTR_PACKAGES="ffmpeg ices2 icecast2 nginx"
-STABLE_VERSION=1.3.3c-stable
+STABLE_VERSION=1.3.3d
+BRANCH_VERSION=develop
 
 # install/uninstall packages, files, and folders
 
@@ -109,11 +110,11 @@ if [ "$MODE" == "1" ]; then
         cp -r /opt/BBC-Radio-Relay-${STABLE_VERSION}/config $BASE_FOLDER
 
     elif [ "$VERSION" == "2" ]; then
-        wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/master.zip" -O /opt/bbc-radio-relay.zip
+        wget "https://github.com/zenodotus280/BBC-Radio-Relay/archive/refs/heads/${BRANCH_VERSION}.zip" -O /opt/bbc-radio-relay.zip
         unzip -d /opt /opt/bbc-radio-relay.zip
-        cp -r /opt/BBC-Radio-Relay-master/radio-relay/* $BASE_FOLDER
-        cp -r /opt/BBC-Radio-Relay-master/radio-player/* $BASE_FOLDER/www
-        cp -r /opt/BBC-Radio-Relay-master/config $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-${BRANCH_VERSION}/radio-relay/* $BASE_FOLDER
+        cp -r /opt/BBC-Radio-Relay-${BRANCH_VERSION}/radio-player/* $BASE_FOLDER/www
+        cp -r /opt/BBC-Radio-Relay-${BRANCH_VERSION}/config $BASE_FOLDER
     fi
 
     mv $BASE_FOLDER/config/nginx-default.conf /etc/nginx/sites-available/default
